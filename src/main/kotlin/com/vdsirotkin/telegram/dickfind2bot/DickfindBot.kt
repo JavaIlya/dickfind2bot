@@ -9,6 +9,8 @@ import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.*
+import com.vdsirotkin.telegram.dickfind2bot.engine.Entity
+import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.NOTHING
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
 import com.vdsirotkin.telegram.dickfind2bot.engine.Round
@@ -71,7 +73,7 @@ class DickfindBot(
                 @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             repeat(3) {
-                addRow(InlineKeyboardButton("\uD83D\uDCE6").callbackData("turn_${it}_0"), InlineKeyboardButton("\uD83D\uDCE6").callbackData("turn_${it}_1"), InlineKeyboardButton("\uD83D\uDCE6").callbackData("turn_${it}_2"))
+                addRow(InlineKeyboardButton(NOTHING.value).callbackData("turn_${it}_0"), InlineKeyboardButton(NOTHING.value).callbackData("turn_${it}_1"), InlineKeyboardButton(NOTHING.value).callbackData("turn_${it}_2"))
             }
         }))
     }
