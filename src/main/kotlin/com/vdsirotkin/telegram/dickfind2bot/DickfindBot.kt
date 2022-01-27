@@ -9,7 +9,6 @@ import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.*
-import com.vdsirotkin.telegram.dickfind2bot.engine.Entity
 import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.NOTHING
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
@@ -100,10 +99,10 @@ class DickfindBot(
                 
                 @${
                 execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()
-            } нашол ${currentRound.entitiesMap[currentRound.user1Coordinates!!.first][currentRound.user1Coordinates!!.second]}
+            } нашол ${currentRound.entitiesMap[currentRound.firstUserCoordinates!!.first][currentRound.firstUserCoordinates!!.second]}
                 @${
                 execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()
-            } нашол ${currentRound.entitiesMap[currentRound.user2Coordinates!!.first][currentRound.user2Coordinates!!.second]}
+            } нашол ${currentRound.entitiesMap[currentRound.secondUserCoordinates!!.first][currentRound.secondUserCoordinates!!.second]}
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
                 currentRound.entitiesMap.forEach {
                     addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())

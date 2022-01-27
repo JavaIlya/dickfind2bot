@@ -41,12 +41,12 @@ class GameEngine(
         val round = getCurrentRound(game, messageId)
         when {
             game.firstPlayer.chatId == userChatId -> {
-                round.takeIf { it.user1Coordinates == null }?.copy(user1Coordinates = coordinates)?.also { updatedRound ->
+                round.takeIf { it.firstUserCoordinates == null }?.copy(firstUserCoordinates = coordinates)?.also { updatedRound ->
                     saveUpdatedRound(game, updatedRound, messageId)
                 }
             }
             game.secondPlayer?.chatId == userChatId -> {
-                round.takeIf { it.user2Coordinates == null }?.copy(user2Coordinates = coordinates)?.also { updatedRound ->
+                round.takeIf { it.secondUserCoordinates == null }?.copy(secondUserCoordinates = coordinates)?.also { updatedRound ->
                     saveUpdatedRound(game, updatedRound, messageId)
                 }
             }
@@ -61,7 +61,7 @@ class GameEngine(
     fun finishRound(messageId: Long): Boolean {
         val game = getGame(messageId)
         val currentRound = getCurrentRound(game, messageId)
-        if (currentRound.user1Coordinates != null && currentRound.user2Coordinates != null) {
+        if (currentRound.firstUserCoordinates != null && currentRound.secondUserCoordinates != null) {
             val updatedGame = determineWinner(game, currentRound)
             saveGame(messageId, updatedGame)
             return true
@@ -94,7 +94,7 @@ class GameEngine(
 
     private fun validateRoundIsOver(messageId: Long, game: Game) {
         val lastRound = game.rounds.maxByOrNull { it.order } ?: return
-        if (lastRound.user1Coordinates == null || lastRound.user2Coordinates == null) {
+        if (lastRound.firstUserCoordinates == null || lastRound.secondUserCoordinates == null) {
             throw IllegalArgumentException("Last round of '$messageId' game is not finished yet!")
         }
     }

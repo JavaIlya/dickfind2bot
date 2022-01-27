@@ -12,10 +12,10 @@ data class User(
 )
 
 data class Round(
-    val entitiesMap: Array<Array<Entity>>,
-    val user1Coordinates: Pair<Int, Int>? = null,
-    val user2Coordinates: Pair<Int, Int>? = null,
-    val order: Int = 1
+        val entitiesMap: Array<Array<Entity>>,
+        val firstUserCoordinates: Pair<Int, Int>? = null,
+        val secondUserCoordinates: Pair<Int, Int>? = null,
+        val order: Int = 1
 )
 
 enum class Entity(val value: String) {
