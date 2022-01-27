@@ -43,7 +43,7 @@ class DickfindBot(
             return
         }
         when {
-            update.message()?.text() == "/duel" -> startDuel(update.message())
+            update.message()?.text()?.startsWith("/duel") == true -> startDuel(update.message())
             update.callbackQuery()?.data()?.startsWith("join") == true -> joinGame(update.callbackQuery())
             update.callbackQuery()?.data()?.startsWith("turn") == true -> handleTurn(update.callbackQuery())
         }
