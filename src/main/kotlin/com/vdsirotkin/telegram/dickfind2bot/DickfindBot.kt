@@ -58,7 +58,7 @@ class DickfindBot(
 
     private fun joinGame(callbackQuery: CallbackQuery) {
         val game = gameEngine.user2join(callbackQuery.message().messageId().toLong(), callbackQuery.from().id())
-        if (game.user2 != null) {
+        if (game.secondPlayer != null) {
             sendNewRound(callbackQuery, game)
         }
     }
@@ -67,11 +67,11 @@ class DickfindBot(
         execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль
                 
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.user1.chatId)).chatMember().user().username()} - ${game.user1.score}/3
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.user2!!.chatId)).chatMember().user().username()} - ${game.user2?.score}/3
+                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()} - ${game.firstPlayer.score}/3
+                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             repeat(3) {
-                addRow(InlineKeyboardButton("коробка").callbackData("turn_${it}_0"), InlineKeyboardButton("коробка").callbackData("turn_${it}_1"), InlineKeyboardButton("коробка").callbackData("turn_${it}_2"))
+                addRow(InlineKeyboardButton("\uD83D\uDCE6").callbackData("turn_${it}_0"), InlineKeyboardButton("\uD83D\uDCE6").callbackData("turn_${it}_1"), InlineKeyboardButton("\uD83D\uDCE6").callbackData("turn_${it}_2"))
             }
         }))
     }
@@ -80,30 +80,31 @@ class DickfindBot(
         val split = callbackQuery.data().split("_")
         val messageId = callbackQuery.message().messageId().toLong()
         val usersTurnResult = gameEngine.usersTurn(messageId, callbackQuery.from().id(), split[1].toInt() to split[2].toInt())
-        execute(AnswerCallbackQuery(callbackQuery.id()).text("Ты нашел ${usersTurnResult.name}"))
+        val resultItem = usersTurnResult
+        execute(AnswerCallbackQuery(callbackQuery.id()).text("Ты нашел ${usersTurnResult}"))
         val roundFinished = gameEngine.finishRound(messageId)
         if (roundFinished) {
             val game = gameEngine.getGame(messageId)
             val currentRound = gameEngine.getCurrentRound(game, messageId)
-            if (game.user1.score >= 3 || game.user2?.score!! >= 3) {
+            if (game.firstPlayer.score >= 3 || game.secondPlayer?.score!! >= 3) {
                 handleFinishGame(callbackQuery, game, currentRound, messageId)
                 return
             }
             execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль
                 
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.user1.chatId)).chatMember().user().username()} - ${game.user1.score}/3
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.user2!!.chatId)).chatMember().user().username()} - ${game.user2?.score}/3
+                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()} - ${game.firstPlayer.score}/3
+                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
                 
                 @${
-                execute(GetChatMember(callbackQuery.message().chat().id(), game.user1.chatId)).chatMember().user().username()
+                execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()
             } нашол ${currentRound.entitiesMap[currentRound.user1Coordinates!!.first][currentRound.user1Coordinates!!.second]}
                 @${
-                execute(GetChatMember(callbackQuery.message().chat().id(), game.user2!!.chatId)).chatMember().user().username()
+                execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()
             } нашол ${currentRound.entitiesMap[currentRound.user2Coordinates!!.first][currentRound.user2Coordinates!!.second]}
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
                 currentRound.entitiesMap.forEach {
-                    addRow(*it.map { InlineKeyboardButton(it.name).callbackData("placeholder") }.toTypedArray())
+                    addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
                 }
             }))
             GlobalScope.launch {
@@ -115,21 +116,21 @@ class DickfindBot(
     }
 
     private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round, messageId: Long) {
-        val winner = if (game.user1.score >= 3) {
-            execute(GetChatMember(callbackQuery.message().chat().id(), game.user1.chatId)).chatMember().user().username()
+        val winner = if (game.firstPlayer.score >= 3) {
+            execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()
         } else {
-            execute(GetChatMember(callbackQuery.message().chat().id(), game.user2!!.chatId)).chatMember().user().username()
+            execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()
         }
         execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль
                 
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.user1.chatId)).chatMember().user().username()} - ${game.user1.score}/3
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.user2!!.chatId)).chatMember().user().username()} - ${game.user2?.score}/3
+                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()} - ${game.firstPlayer.score}/3
+                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
                 
                 Победитель - @${winner}
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             currentRound.entitiesMap.forEach {
-                addRow(*it.map { InlineKeyboardButton(it.name).callbackData("placeholder") }.toTypedArray())
+                addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
             }
         }))
     }
