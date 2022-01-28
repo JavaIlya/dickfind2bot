@@ -15,10 +15,10 @@ class GameEngine(
 
     fun user2join(messageId: Long, userId: Long): Game {
         val game = getGame(messageId)
-        if (game.user1.chatId == userId) {
+        if (game.firstPlayer.chatId == userId) {
             return game
         }
-        val updatedGame = game.copy(user2 = User(userId))
+        val updatedGame = game.copy(secondPlayer = User(userId))
         saveGame(messageId, updatedGame)
         newRound(messageId)
         return updatedGame
@@ -40,13 +40,13 @@ class GameEngine(
         val game = getGame(messageId)
         val round = getCurrentRound(game, messageId)
         when {
-            game.user1.chatId == userChatId -> {
-                round.takeIf { it.user1Coordinates == null }?.copy(user1Coordinates = coordinates)?.also { updatedRound ->
+            game.firstPlayer.chatId == userChatId -> {
+                round.takeIf { it.firstUserCoordinates == null }?.copy(firstUserCoordinates = coordinates)?.also { updatedRound ->
                     saveUpdatedRound(game, updatedRound, messageId)
                 }
             }
-            game.user2?.chatId == userChatId -> {
-                round.takeIf { it.user2Coordinates == null }?.copy(user2Coordinates = coordinates)?.also { updatedRound ->
+            game.secondPlayer?.chatId == userChatId -> {
+                round.takeIf { it.secondUserCoordinates == null }?.copy(secondUserCoordinates = coordinates)?.also { updatedRound ->
                     saveUpdatedRound(game, updatedRound, messageId)
                 }
             }
@@ -61,7 +61,7 @@ class GameEngine(
     fun finishRound(messageId: Long): Boolean {
         val game = getGame(messageId)
         val currentRound = getCurrentRound(game, messageId)
-        if (currentRound.user1Coordinates != null && currentRound.user2Coordinates != null) {
+        if (currentRound.firstUserCoordinates != null && currentRound.secondUserCoordinates != null) {
             val updatedGame = determineWinner(game, currentRound)
             saveGame(messageId, updatedGame)
             return true
@@ -70,20 +70,20 @@ class GameEngine(
     }
 
     private fun determineWinner(game: Game, currentRound: Round): Game {
-        val (entitiesMap, user1Coordinates, user2Coordinates) = currentRound
-        val user1Choice = entitiesMap[user1Coordinates!!.first][user1Coordinates.second]
-        val user2Choice = entitiesMap[user2Coordinates!!.first][user2Coordinates.second]
+        val (entitiesMap, firstUserCoordinates, secondUserCoordinates) = currentRound
+        val firstUserChoice = entitiesMap[firstUserCoordinates!!.first][firstUserCoordinates.second]
+        val secondUserChoice = entitiesMap[secondUserCoordinates!!.first][secondUserCoordinates.second]
         var resultGame = game
-        if (user1Choice == Entity.GOLDEN_DICK) {
-            game.user1.copy(score = game.user1.score + 9).also { resultGame = resultGame.copy(user1 = it) }
+        if (firstUserChoice == Entity.GOLDEN_DICK) {
+            game.firstPlayer.copy(score = game.firstPlayer.score + 9).also { resultGame = resultGame.copy(firstPlayer = it) }
         }
-        if (user2Choice == Entity.GOLDEN_DICK) {
-            game.user2?.copy(score = game.user2.score + 9).also { resultGame = resultGame.copy(user2 = it) }
+        if (secondUserChoice == Entity.GOLDEN_DICK) {
+            game.secondPlayer?.copy(score = game.secondPlayer.score + 9).also { resultGame = resultGame.copy(secondPlayer = it) }
         }
-        if (user1Choice == Entity.DICK && user2Choice == Entity.NOTHING) {
-            game.user1.copy(score = game.user1.score + 1).also { resultGame = resultGame.copy(user1 = it) }
-        } else if (user1Choice == Entity.NOTHING && user2Choice == Entity.DICK) {
-            game.user2?.copy(score = game.user2.score + 1).also { resultGame = resultGame.copy(user2 = it) }
+        if (firstUserChoice == Entity.DICK && secondUserChoice == Entity.NOTHING) {
+            game.firstPlayer.copy(score = game.firstPlayer.score + 1).also { resultGame = resultGame.copy(firstPlayer = it) }
+        } else if (firstUserChoice == Entity.NOTHING && secondUserChoice == Entity.DICK) {
+            game.secondPlayer?.copy(score = game.secondPlayer.score + 1).also { resultGame = resultGame.copy(secondPlayer = it) }
         }
         return resultGame
     }
@@ -94,7 +94,7 @@ class GameEngine(
 
     private fun validateRoundIsOver(messageId: Long, game: Game) {
         val lastRound = game.rounds.maxByOrNull { it.order } ?: return
-        if (lastRound.user1Coordinates == null || lastRound.user2Coordinates == null) {
+        if (lastRound.firstUserCoordinates == null || lastRound.secondUserCoordinates == null) {
             throw IllegalArgumentException("Last round of '$messageId' game is not finished yet!")
         }
     }
