@@ -10,18 +10,21 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.*
 import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.NOTHING
+import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.UNKNOWN
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
 import com.vdsirotkin.telegram.dickfind2bot.engine.Round
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import mu.KLogging
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 
 @Component
 class DickfindBot(
-    private val botConfig: BotConfig,
+    botConfig: BotConfig,
     private val gameEngine: GameEngine
 ) : TelegramBot(botConfig.token) {
 
@@ -32,7 +35,7 @@ class DickfindBot(
                 try {
                     onUpdate(it)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    logger.error(e) {}
                 }
             }
             UpdatesListener.CONFIRMED_UPDATES_ALL
@@ -51,28 +54,30 @@ class DickfindBot(
     }
 
     private fun startDuel(message: Message) {
-        val response = execute(SendMessage(message.chat().id(), "@${
-            message.from().username()
-        } хочет поискать писюны. Кто тож?").replyMarkup(InlineKeyboardMarkup().addRow(InlineKeyboardButton("Присоединиться").callbackData("join"))))
-        gameEngine.startNewEmptyGame(response.message().messageId().toLong(), message.from().id())
+        val response = execute(SendMessage(
+            message.chat().id(),
+            "${message.from().firstName()} хочет поискать писюны. Кто тож?"
+        ).replyMarkup(InlineKeyboardMarkup().addRow(InlineKeyboardButton("Присоединиться").callbackData("join"))))
+        gameEngine.startNewEmptyGame(response.message().messageId().toLong(), message.from().id(), message.from().firstName())
     }
 
     private fun joinGame(callbackQuery: CallbackQuery) {
-        val game = gameEngine.user2join(callbackQuery.message().messageId().toLong(), callbackQuery.from().id())
+        val game = gameEngine.secondPlayerJoin(callbackQuery.message().messageId().toLong(), callbackQuery.from().id(), callbackQuery.from().firstName())
         if (game.secondPlayer != null) {
-            sendNewRound(callbackQuery, game)
+            runBlocking { sendNewRound(callbackQuery, game) }
         }
     }
 
-    private fun sendNewRound(callbackQuery: CallbackQuery, game: Game) {
-        execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
-                Дуэль
+    private suspend fun sendNewRound(callbackQuery: CallbackQuery, game: Game) {
+        val currentRound = gameEngine.getCurrentRound(game, callbackQuery.message().messageId().toLong())
+        executeAsync(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
+                Дуэль. Раунд ${currentRound.order}
                 
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()} - ${game.firstPlayer.score}/3
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
+                ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
+                ${game.secondPlayer?.firstName} - ${game.secondPlayer?.score}/3
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             repeat(3) {
-                addRow(InlineKeyboardButton(NOTHING.value).callbackData("turn_${it}_0"), InlineKeyboardButton(NOTHING.value).callbackData("turn_${it}_1"), InlineKeyboardButton(NOTHING.value).callbackData("turn_${it}_2"))
+                addRow(InlineKeyboardButton(UNKNOWN.value).callbackData("turn_${it}_0"), InlineKeyboardButton(UNKNOWN.value).callbackData("turn_${it}_1"), InlineKeyboardButton(UNKNOWN.value).callbackData("turn_${it}_2"))
             }
         }))
     }
@@ -81,35 +86,31 @@ class DickfindBot(
         val split = callbackQuery.data().split("_")
         val messageId = callbackQuery.message().messageId().toLong()
         val usersTurnResult = gameEngine.usersTurn(messageId, callbackQuery.from().id(), split[1].toInt() to split[2].toInt())
-        val resultItem = usersTurnResult
-        execute(AnswerCallbackQuery(callbackQuery.id()).text("Ты нашел ${usersTurnResult}"))
-        val roundFinished = gameEngine.finishRound(messageId)
+        if (usersTurnResult == UNKNOWN) return
+        execute(AnswerCallbackQuery(callbackQuery.id()).text("Ты нашел $usersTurnResult"))
+        val roundFinished = gameEngine.tryFinishRound(messageId)
         if (roundFinished) {
             val game = gameEngine.getGame(messageId)
             val currentRound = gameEngine.getCurrentRound(game, messageId)
-            if (game.firstPlayer.score >= 3 || game.secondPlayer?.score!! >= 3) {
+            if (game.firstPlayer.score >= 3 || game.secondPlayer!!.score >= 3) {
                 handleFinishGame(callbackQuery, game, currentRound, messageId)
                 return
             }
             execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
-                Дуэль
+                Дуэль. Раунд ${currentRound.order}
                 
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()} - ${game.firstPlayer.score}/3
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
+                ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
+                ${game.secondPlayer.firstName} - ${game.secondPlayer.score}/3
                 
-                @${
-                execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()
-            } нашол ${currentRound.entitiesMap[currentRound.firstUserCoordinates!!.first][currentRound.firstUserCoordinates!!.second]}
-                @${
-                execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()
-            } нашол ${currentRound.entitiesMap[currentRound.secondUserCoordinates!!.first][currentRound.secondUserCoordinates!!.second]}
+                ${game.firstPlayer.firstName} нашол ${currentRound.entitiesMap[currentRound.firstUserCoordinates!!.first][currentRound.firstUserCoordinates.second]}
+                ${game.secondPlayer.firstName} нашол ${currentRound.entitiesMap[currentRound.secondUserCoordinates!!.first][currentRound.secondUserCoordinates.second]}
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
                 currentRound.entitiesMap.forEach {
                     addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
                 }
             }))
             GlobalScope.launch {
-                delay(2000)
+                delay(4000)
                 gameEngine.newRound(messageId)
                 sendNewRound(callbackQuery, gameEngine.getGame(messageId))
             }
@@ -118,17 +119,17 @@ class DickfindBot(
 
     private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round, messageId: Long) {
         val winner = if (game.firstPlayer.score >= 3) {
-            execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()
+            game.firstPlayer.firstName
         } else {
-            execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()
+            game.secondPlayer?.firstName
         }
         execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
-                Дуэль
+                Дуэль. Раунд ${currentRound.order}
                 
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.firstPlayer.chatId)).chatMember().user().username()} - ${game.firstPlayer.score}/3
-                @${execute(GetChatMember(callbackQuery.message().chat().id(), game.secondPlayer!!.chatId)).chatMember().user().username()} - ${game.secondPlayer?.score}/3
+                ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
+                ${game.secondPlayer!!.firstName} - ${game.secondPlayer.score}/3
                 
-                Победитель - @${winner}
+                Победитель - $winner
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             currentRound.entitiesMap.forEach {
                 addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
@@ -144,5 +145,7 @@ class DickfindBot(
             else -> false
         }
     }
+
+    companion object : KLogging()
 
 }
