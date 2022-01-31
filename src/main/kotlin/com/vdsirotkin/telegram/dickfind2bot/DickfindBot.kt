@@ -9,11 +9,15 @@ import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.*
-import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.NOTHING
+import com.vdsirotkin.telegram.dickfind2bot.config.MessageBus
+import com.vdsirotkin.telegram.dickfind2bot.engine.Entity
 import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.UNKNOWN
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
 import com.vdsirotkin.telegram.dickfind2bot.engine.Round
+import com.vdsirotkin.telegram.dickfind2bot.stats.FoundDickEvent
+import com.vdsirotkin.telegram.dickfind2bot.stats.FoundNothingEvent
+import com.vdsirotkin.telegram.dickfind2bot.stats.GameFinishedEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -25,7 +29,8 @@ import javax.annotation.PostConstruct
 @Component
 class DickfindBot(
     botConfig: BotConfig,
-    private val gameEngine: GameEngine
+    private val gameEngine: GameEngine,
+    private val messageBus: MessageBus
 ) : TelegramBot(botConfig.token) {
 
     @PostConstruct
@@ -88,12 +93,16 @@ class DickfindBot(
         val usersTurnResult = gameEngine.usersTurn(messageId, callbackQuery.from().id(), split[1].toInt() to split[2].toInt())
         if (usersTurnResult == UNKNOWN) return
         execute(AnswerCallbackQuery(callbackQuery.id()).text("Ты нашел $usersTurnResult"))
+        when (usersTurnResult) {
+            Entity.DICK -> messageBus.publish(FoundDickEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
+            Entity.NOTHING -> messageBus.publish(FoundNothingEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
+        }
         val roundFinished = gameEngine.tryFinishRound(messageId)
         if (roundFinished) {
             val game = gameEngine.getGame(messageId)
             val currentRound = gameEngine.getCurrentRound(game, messageId)
             if (game.firstPlayer.score >= 3 || game.secondPlayer!!.score >= 3) {
-                handleFinishGame(callbackQuery, game, currentRound, messageId)
+                handleFinishGame(callbackQuery, game, currentRound)
                 return
             }
             execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
@@ -117,24 +126,25 @@ class DickfindBot(
         }
     }
 
-    private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round, messageId: Long) {
-        val winner = if (game.firstPlayer.score >= 3) {
-            game.firstPlayer.firstName
+    private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
+        val (winner, loser) = if (game.firstPlayer.score >= 3) {
+            game.firstPlayer to game.secondPlayer!!
         } else {
-            game.secondPlayer?.firstName
+            game.secondPlayer!! to game.firstPlayer
         }
         execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль. Раунд ${currentRound.order}
                 
                 ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
-                ${game.secondPlayer!!.firstName} - ${game.secondPlayer.score}/3
+                ${game.secondPlayer.firstName} - ${game.secondPlayer.score}/3
                 
-                Победитель - $winner
+                Победитель - ${winner.firstName}
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             currentRound.entitiesMap.forEach {
                 addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
             }
         }))
+        messageBus.publish(GameFinishedEvent(callbackQuery.message().chat().id(), winner.chatId, loser.chatId))
     }
 
     private fun isGroup(update: Update): Boolean {
