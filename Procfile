@@ -1,1 +1,1 @@
-web: java -jar -Dspring.profiles.active=heroku backend/target/dickfind2bot.jar
+worker: java -jar -Dspring.profiles.active=heroku backend/target/dickfind2bot.jar
