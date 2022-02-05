@@ -40,17 +40,25 @@ class StatsService(
         val user = statsRepository.findById(userAndChatId).orElse(null) ?:
         return "Про тебя нет никакой инфы. Отьебись."
 
+        val totalFound = user.foundDicks + user.foundGoldenDicks + user.foundNothing;
+        val totalDuels = user.wins + user.loses;
+
         return """
              Стата пользователя $name
             
-             Найдено членов: ${user.foundDicks}
-             Найдено ЗОЛОТЫХ членов: ${user.foundGoldenDicks}
-             Найдено пустых коробок: ${user.foundNothing}
+             Найдено членов: ${user.foundDicks} (${getPercent(totalFound, user.foundDicks)}%)
+             Найдено ЗОЛОТЫХ членов: ${user.foundGoldenDicks} (${getPercent(totalFound, user.foundGoldenDicks)}%)
+             Найдено пустых коробок: ${user.foundNothing} (${getPercent(totalFound, user.foundNothing)}%)
              
              Дуэли:
-             Победы: ${user.wins}
-             Пососы: ${user.loses}
+             Победы: ${user.wins} (${getPercent(totalDuels, user.wins)}%)
+             Пососы: ${user.loses} (${getPercent(totalDuels, user.loses)}%)
         """.trimIndent()
     }
 
+    private fun getPercent(total: Int, desired: Int): String {
+        if (desired == 0) return "0";
+        val percent = (desired.toDouble() * 100 / total.toDouble());
+        return String.format("%.2f", percent);
+    }
 }
