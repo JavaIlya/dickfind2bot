@@ -36,4 +36,21 @@ class StatsService(
         }
     }
 
+    fun getStats(userAndChatId: UserAndChatId, name: String): String {
+        val user = statsRepository.findById(userAndChatId).orElse(null) ?:
+        return "Про тебя нет никакой инфы. Отьебись."
+
+        return """
+             Стата пользователя $name
+            
+             Найдено членов: ${user.foundDicks}
+             Найдено ЗОЛОТЫХ членов: ${user.foundGoldenDicks}
+             Найдено пустых коробок: ${user.foundNothing}
+             
+             Дуэли:
+             Победы: ${user.wins}
+             Пососы: ${user.loses}
+        """.trimIndent()
+    }
+
 }

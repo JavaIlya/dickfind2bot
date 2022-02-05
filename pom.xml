@@ -69,12 +69,18 @@
 			</dependencies>
 		</profile>
 		<profile>
-			<id>prod</id>
-			<dependencies></dependencies>
+			<id>heroku</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.postgresql</groupId>
+					<artifactId>postgresql</artifactId>
+				</dependency>
+			</dependencies>
 		</profile>
 	</profiles>
 
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
