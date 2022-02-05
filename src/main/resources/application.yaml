@@ -13,7 +13,7 @@ spring:
 spring:
   config:
     activate:
-      on-profile: prod
+      on-profile: heroku
   datasource:
     url: jdbc:${DB_URI}
     username: ${DB_USERNAME}

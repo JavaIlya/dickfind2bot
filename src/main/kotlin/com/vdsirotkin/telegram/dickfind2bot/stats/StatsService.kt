@@ -36,15 +36,9 @@ class StatsService(
         }
     }
 
-    @Transactional
     fun getStats(userAndChatId: UserAndChatId, name: String): String {
-        val optionalUser = statsRepository.findById(userAndChatId);
-
-        if (optionalUser.isEmpty) {
-            return "Про тебя нет никакой инфы. Отъебись."
-        }
-
-        val user = optionalUser.get();
+        val user = statsRepository.findById(userAndChatId).orElse(null) ?:
+        return "Про тебя нет никакой инфы. Отьебись."
 
         return """
              Стата пользователя $name

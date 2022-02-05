@@ -69,7 +69,7 @@
 			</dependencies>
 		</profile>
 		<profile>
-			<id>prod</id>
+			<id>heroku</id>
 			<dependencies>
 				<dependency>
 					<groupId>org.postgresql</groupId>
@@ -111,18 +111,6 @@
 						<version>${kotlin.version}</version>
 					</dependency>
 				</dependencies>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.0.1</version>
-				<executions>
-					<execution>
-						<id>copy-dependencies</id>
-						<phase>package</phase>
-						<goals><goal>copy-dependencies</goal></goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
