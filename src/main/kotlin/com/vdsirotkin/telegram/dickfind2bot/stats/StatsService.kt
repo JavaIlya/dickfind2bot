@@ -36,4 +36,27 @@ class StatsService(
         }
     }
 
+    @Transactional
+    fun getStats(userAndChatId: UserAndChatId, name: String): String {
+        val optionalUser = statsRepository.findById(userAndChatId);
+
+        if (optionalUser.isEmpty) {
+            return "Отъебись."
+        }
+
+        val user = optionalUser.get();
+
+        return """
+             Стата пользователя $name
+            
+             Найдено членов: ${user.foundDicks}
+             Найдено ЗОЛОТЫХ членов: ${user.foundGoldenDicks}
+             Найдено пустых коробок: ${user.foundNothing}
+             
+             Дуэли:
+             Победы: ${user.wins}
+             Пососы: ${user.loses}
+        """.trimIndent()
+    }
+
 }

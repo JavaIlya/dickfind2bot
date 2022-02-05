@@ -15,9 +15,7 @@ import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.UNKNOWN
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
 import com.vdsirotkin.telegram.dickfind2bot.engine.Round
-import com.vdsirotkin.telegram.dickfind2bot.stats.FoundDickEvent
-import com.vdsirotkin.telegram.dickfind2bot.stats.FoundNothingEvent
-import com.vdsirotkin.telegram.dickfind2bot.stats.GameFinishedEvent
+import com.vdsirotkin.telegram.dickfind2bot.stats.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -30,7 +28,8 @@ import javax.annotation.PostConstruct
 class DickfindBot(
     botConfig: BotConfig,
     private val gameEngine: GameEngine,
-    private val messageBus: MessageBus
+    private val messageBus: MessageBus,
+    private val statsService: StatsService
 ) : TelegramBot(botConfig.token) {
 
     @PostConstruct
@@ -53,6 +52,7 @@ class DickfindBot(
         }
         when {
             update.message()?.text()?.startsWith("/duel") == true -> startDuel(update.message())
+            update.message()?.text()?.startsWith("/stats") == true -> getStats(update.message())
             update.callbackQuery()?.data()?.startsWith("join") == true -> joinGame(update.callbackQuery())
             update.callbackQuery()?.data()?.startsWith("turn") == true -> handleTurn(update.callbackQuery())
         }
@@ -66,6 +66,13 @@ class DickfindBot(
         gameEngine.startNewEmptyGame(response.message().messageId().toLong(), message.from().id(), message.from().firstName())
     }
 
+    private fun getStats(message: Message) {
+        execute(SendMessage(
+                message.chat().id(),
+                statsService.getStats(UserAndChatId(message.chat().id(), message.from().id()),
+                        message.from().firstName()))
+        );
+    }
     private fun joinGame(callbackQuery: CallbackQuery) {
         val game = gameEngine.secondPlayerJoin(callbackQuery.message().messageId().toLong(), callbackQuery.from().id(), callbackQuery.from().firstName())
         if (game.secondPlayer != null) {
