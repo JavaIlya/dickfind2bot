@@ -41,7 +41,7 @@ class StatsService(
         val optionalUser = statsRepository.findById(userAndChatId);
 
         if (optionalUser.isEmpty) {
-            return "Отъебись."
+            return "Про тебя нет никакой инфы. Отъебись."
         }
 
         val user = optionalUser.get();
