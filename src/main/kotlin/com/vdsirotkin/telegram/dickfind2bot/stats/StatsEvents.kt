@@ -17,3 +17,9 @@ data class GameFinishedEvent(
     val userWonId: Long,
     val userLostId: Long
 ) : Event
+
+data class GameFinishedDrawEvent(
+        val chatId: Long,
+        val firstUserId: Long,
+        val secondUserId: Long
+) : Event
