@@ -1,6 +1,7 @@
 package com.vdsirotkin.telegram.dickfind2bot.stats
 
 import org.springframework.stereotype.Service
+import java.util.*
 import javax.transaction.Transactional
 
 @Service
@@ -36,12 +37,22 @@ class StatsService(
         }
     }
 
+    @Transactional
+    fun saveDrawGameResults(firstUser: UserAndChatId, secondUser: UserAndChatId) {
+        val players = statsRepository.findAllById(listOf(firstUser, secondUser));
+        players.forEach {
+            it.copy(draws = it.draws + 1).also {
+                statsRepository.save(it)
+            }
+        };
+    }
+
     fun getStats(userAndChatId: UserAndChatId, name: String): String {
         val user = statsRepository.findById(userAndChatId).orElse(null) ?:
         return "Про тебя нет никакой инфы. Отьебись."
 
         val totalFound = user.foundDicks + user.foundGoldenDicks + user.foundNothing;
-        val totalDuels = user.wins + user.loses;
+        val totalDuels = user.wins + user.loses + user.draws;
 
         return """
              Стата пользователя $name
@@ -53,6 +64,7 @@ class StatsService(
              Дуэли:
              Победы: ${user.wins} (${getPercent(totalDuels, user.wins)}%)
              Пососы: ${user.loses} (${getPercent(totalDuels, user.loses)}%)
+             Ничьи: ${user.draws} (${getPercent(totalDuels, user.draws)}%)
         """.trimIndent()
     }
 

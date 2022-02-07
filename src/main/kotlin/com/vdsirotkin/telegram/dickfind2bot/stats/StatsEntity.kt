@@ -14,11 +14,12 @@ data class StatsEntity(
     val foundNothing: Int,
     val wins: Int,
     val loses: Int,
+    val draws: Int,
 
     @Version
     val version: Long = -1
 ) {
-    constructor(id: UserAndChatId) : this(id, 0, 0, 0, 0, 0)
+    constructor(id: UserAndChatId) : this(id, 0, 0, 0, 0, 0, 0)
 }
 
 @Embeddable

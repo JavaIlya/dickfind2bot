@@ -30,4 +30,12 @@ class StatsEventsHandlers(
         statsService.saveGameResults(winnerId, loserId)
     }
 
+    @EventListener(GameFinishedDrawEvent::class)
+    fun gameFinishedDrawHandler(event: GameFinishedDrawEvent) {
+        val chatId = event.chatId
+        val firstPlayerId = UserAndChatId(chatId, event.firstUserId)
+        val secondPlayerId = UserAndChatId(chatId, event.secondUserId)
+        statsService.saveDrawGameResults(firstPlayerId, secondPlayerId);
+    }
+
 }
