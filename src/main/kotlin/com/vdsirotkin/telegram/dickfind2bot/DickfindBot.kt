@@ -133,7 +133,27 @@ class DickfindBot(
         }
     }
 
+    private fun handleDraw(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
+        execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
+                Дуэль. Раунд ${currentRound.order}
+                
+                ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
+                ${game.secondPlayer!!.firstName} - ${game.secondPlayer.score}/3
+                
+                Нихуя себе! У нас тут ничья!
+            """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
+            currentRound.entitiesMap.forEach {
+                addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
+            }
+        }))
+        messageBus.publish(GameFinishedDrawEvent(callbackQuery.message().chat().id(), game.firstPlayer.chatId, game.secondPlayer.chatId))
+    }
+
     private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
+        if (game.firstPlayer.score == game.secondPlayer!!.score && game.firstPlayer.score >= 3) {
+            handleDraw(callbackQuery, game, currentRound);
+            return;
+        }
         val (winner, loser) = if (game.firstPlayer.score >= 3) {
             game.firstPlayer to game.secondPlayer!!
         } else {
