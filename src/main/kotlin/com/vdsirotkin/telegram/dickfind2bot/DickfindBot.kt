@@ -103,6 +103,7 @@ class DickfindBot(
         when (usersTurnResult) {
             Entity.DICK -> messageBus.publish(FoundDickEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
             Entity.NOTHING -> messageBus.publish(FoundNothingEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
+            Entity.GOLDEN_DICK -> messageBus.publish(FoundGoldenDickEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
         }
         val roundFinished = gameEngine.tryFinishRound(messageId)
         if (roundFinished) {
@@ -154,7 +155,7 @@ class DickfindBot(
             handleDraw(callbackQuery, game, currentRound);
             return;
         }
-        val (winner, loser) = if (game.firstPlayer.score >= 3) {
+        val (winner, loser) = if (game.firstPlayer.score >= 3 && game.firstPlayer.score > game.secondPlayer.score) {
             game.firstPlayer to game.secondPlayer!!
         } else {
             game.secondPlayer!! to game.firstPlayer

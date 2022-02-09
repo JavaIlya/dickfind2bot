@@ -15,6 +15,13 @@ class StatsEventsHandlers(
         statsService.incrementDicks(id)
     }
 
+    @EventListener(FoundGoldenDickEvent::class)
+    fun foundGoldenDickEventHandler(event: FoundGoldenDickEvent) {
+        val (chatId, userId) = event
+        val id = UserAndChatId(chatId, userId)
+        statsService.incrementGoldenDicks(id)
+    }
+
     @EventListener(FoundNothingEvent::class)
     fun foundNothingEventHandler(event: FoundNothingEvent) {
         val (chatId, userId) = event

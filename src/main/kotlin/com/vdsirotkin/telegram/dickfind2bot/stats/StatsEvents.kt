@@ -7,6 +7,11 @@ data class FoundDickEvent(
     val userId: Long
 ) : Event
 
+data class FoundGoldenDickEvent(
+        val chatId: Long,
+        val userId: Long
+): Event
+
 data class FoundNothingEvent(
     val chatId: Long,
     val userId: Long
