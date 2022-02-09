@@ -26,6 +26,14 @@ class StatsService(
     }
 
     @Transactional
+    fun incrementGoldenDicks(id: UserAndChatId) {
+        val entity = statsRepository.findById(id).orElse(StatsEntity(id))
+        entity.copy(foundGoldenDicks = entity.foundGoldenDicks + 1).also {
+            statsRepository.save(it)
+        }
+    }
+
+    @Transactional
     fun saveGameResults(winnerId: UserAndChatId, loserId: UserAndChatId) {
         val winner = statsRepository.findById(winnerId).orElseThrow { throw IllegalArgumentException("Can't find stats for winner $winnerId") }
         winner.copy(wins = winner.wins + 1).also {
