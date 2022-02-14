@@ -24,7 +24,7 @@ class MapGenerator(
 
         if (hasAtLeastOneDick && hasAtLeastOneNothing) {
             return map;
-        } else if (hasAtLeastOneDick) {
+        } else if (hasAtLeastOneNothing) {
             populateSimpleDickInMap(map)
         } else {
             populateNothingInMap(map);
