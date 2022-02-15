@@ -5,8 +5,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
-@Component
-@Profile("heroku")
 class RedisCache (private val redisTemplate: RedisTemplate<String, Game>) : GamesCache {
 
     override fun getGame(gameId: String): Game? {

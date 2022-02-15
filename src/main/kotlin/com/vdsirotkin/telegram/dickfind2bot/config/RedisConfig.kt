@@ -9,14 +9,12 @@ import org.springframework.data.redis.core.RedisTemplate
 
 @Configuration
 @Profile("heroku")
-class RedisConfig(
-) {
-
+class RedisConfig {
 
     @Bean
     fun redisTemplate(redisFactory: RedisConnectionFactory): RedisTemplate<String, Game> {
-        val template = RedisTemplate<String, Game>();
-        template.setConnectionFactory(redisFactory);
-        return template;
+        return RedisTemplate<String, Game>().apply {
+            setConnectionFactory(redisFactory)
+        }
     }
 }
