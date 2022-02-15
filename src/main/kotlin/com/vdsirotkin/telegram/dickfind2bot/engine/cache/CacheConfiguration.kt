@@ -14,6 +14,7 @@ class CacheConfiguration {
     @Bean
     @Profile("heroku")
     fun gamesCache(redisTempate: RedisTemplate<String, Game>): GamesCache {
+        logger.info { "Starting redis cache" }
         return RedisCache(redisTempate)
     }
 
