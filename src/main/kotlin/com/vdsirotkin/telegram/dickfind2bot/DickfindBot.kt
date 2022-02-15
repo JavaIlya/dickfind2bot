@@ -63,7 +63,8 @@ class DickfindBot(
             message.chat().id(),
             "${message.from().firstName()} хочет поискать писюны. Кто тож?"
         ).replyMarkup(InlineKeyboardMarkup().addRow(InlineKeyboardButton("Присоединиться").callbackData("join"))))
-        gameEngine.startNewEmptyGame(response.message().messageId().toLong(), message.from().id(), message.from().firstName())
+        val gameId = retrieveGameId(response.message())
+        gameEngine.startNewEmptyGame(gameId, message.from().id(), message.from().firstName())
     }
 
     private fun getStats(message: Message) {
@@ -74,14 +75,15 @@ class DickfindBot(
         );
     }
     private fun joinGame(callbackQuery: CallbackQuery) {
-        val game = gameEngine.secondPlayerJoin(callbackQuery.message().messageId().toLong(), callbackQuery.from().id(), callbackQuery.from().firstName())
+        val gameID = retrieveGameId(callbackQuery.message())
+        val game = gameEngine.secondPlayerJoin(gameID, callbackQuery.from().id(), callbackQuery.from().firstName())
         if (game.secondPlayer != null) {
             runBlocking { sendNewRound(callbackQuery, game) }
         }
     }
 
     private suspend fun sendNewRound(callbackQuery: CallbackQuery, game: Game) {
-        val currentRound = gameEngine.getCurrentRound(game, callbackQuery.message().messageId().toLong())
+        val currentRound = gameEngine.getCurrentRound(game, retrieveGameId(callbackQuery.message()))
         executeAsync(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль. Раунд ${currentRound.order}
                 
@@ -96,8 +98,8 @@ class DickfindBot(
 
     private fun handleTurn(callbackQuery: CallbackQuery) {
         val split = callbackQuery.data().split("_")
-        val messageId = callbackQuery.message().messageId().toLong()
-        val usersTurnResult = gameEngine.usersTurn(messageId, callbackQuery.from().id(), split[1].toInt() to split[2].toInt())
+        val gameId = retrieveGameId(callbackQuery.message())
+        val usersTurnResult = gameEngine.usersTurn(gameId, callbackQuery.from().id(), split[1].toInt() to split[2].toInt())
         if (usersTurnResult == UNKNOWN) return
         execute(AnswerCallbackQuery(callbackQuery.id()).text("Ты нашел $usersTurnResult"))
         when (usersTurnResult) {
@@ -105,10 +107,10 @@ class DickfindBot(
             Entity.NOTHING -> messageBus.publish(FoundNothingEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
             Entity.GOLDEN_DICK -> messageBus.publish(FoundGoldenDickEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
         }
-        val roundFinished = gameEngine.tryFinishRound(messageId)
+        val roundFinished = gameEngine.tryFinishRound(gameId)
         if (roundFinished) {
-            val game = gameEngine.getGame(messageId)
-            val currentRound = gameEngine.getCurrentRound(game, messageId)
+            val game = gameEngine.getGame(gameId)
+            val currentRound = gameEngine.getCurrentRound(game, gameId)
             if (game.firstPlayer.score >= 3 || game.secondPlayer!!.score >= 3) {
                 handleFinishGame(callbackQuery, game, currentRound)
                 return
@@ -128,8 +130,8 @@ class DickfindBot(
             }))
             GlobalScope.launch {
                 delay(4000)
-                gameEngine.newRound(messageId)
-                sendNewRound(callbackQuery, gameEngine.getGame(messageId))
+                gameEngine.newRound(gameId)
+                sendNewRound(callbackQuery, gameEngine.getGame(gameId))
             }
         }
     }
@@ -182,6 +184,12 @@ class DickfindBot(
             Chat.Type.group, Chat.Type.supergroup, Chat.Type.channel -> true
             else -> false
         }
+    }
+
+    fun retrieveGameId(message: Message): String {
+        return """
+            ${message.messageId()}${message.chat().id()}
+        """.trimIndent()
     }
 
     companion object : KLogging()

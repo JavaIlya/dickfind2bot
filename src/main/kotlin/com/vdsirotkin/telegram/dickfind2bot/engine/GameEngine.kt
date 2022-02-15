@@ -9,45 +9,45 @@ class GameEngine(
     private val gamesCache: GamesCache
 ) {
 
-    fun startNewEmptyGame(messageId: Long, userId: Long, firstName: String) {
-        gamesCache.saveGame(messageId, Game(User(userId, firstName)))
+    fun startNewEmptyGame(gameId: String, userId: Long, firstName: String) {
+        gamesCache.saveGame(gameId, Game(User(userId, firstName)))
     }
 
-    fun secondPlayerJoin(messageId: Long, userId: Long, firstName: String): Game {
-        val game = getGame(messageId)
+    fun secondPlayerJoin(gameId: String, userId: Long, firstName: String): Game {
+        val game = getGame(gameId)
         if (game.firstPlayer.chatId == userId) {
             return game
         }
         val updatedGame = game.copy(secondPlayer = User(userId, firstName))
-        gamesCache.saveGame(messageId, updatedGame)
-        newRound(messageId)
-        return gamesCache.getGame(messageId)!!
+        gamesCache.saveGame(gameId, updatedGame)
+        newRound(gameId)
+        return gamesCache.getGame(gameId)!!
     }
 
-    fun newRound(messageId: Long) {
-        val game = getGame(messageId)
+    fun newRound(gameId: String) {
+        val game = getGame(gameId)
         val roundMap = mapGenerator.generateNewMap()
-        validateRoundIsOver(messageId, game)
+        validateRoundIsOver(gameId, game)
         if (game.rounds.isEmpty()) {
-            addRound(game, messageId, Round(roundMap))
+            addRound(game, gameId, Round(roundMap))
         } else {
             val newOrder = game.rounds.maxOf { it.order }.plus(1)
-            addRound(game, messageId, Round(roundMap, order = newOrder))
+            addRound(game, gameId, Round(roundMap, order = newOrder))
         }
     }
 
-    fun usersTurn(messageId: Long, userChatId: Long, coordinates: Pair<Int, Int>): Entity {
-        val game = getGame(messageId)
-        val round = getCurrentRound(game, messageId)
+    fun usersTurn(gameId: String, userChatId: Long, coordinates: Pair<Int, Int>): Entity {
+        val game = getGame(gameId)
+        val round = getCurrentRound(game, gameId)
         when {
             game.firstPlayer.chatId == userChatId -> {
                 round.takeIf { it.firstUserCoordinates == null }?.copy(firstUserCoordinates = coordinates)?.also { updatedRound ->
-                    saveUpdatedRound(game, updatedRound, messageId)
+                    saveUpdatedRound(game, updatedRound, gameId)
                 }
             }
             game.secondPlayer?.chatId == userChatId -> {
                 round.takeIf { it.secondUserCoordinates == null }?.copy(secondUserCoordinates = coordinates)?.also { updatedRound ->
-                    saveUpdatedRound(game, updatedRound, messageId)
+                    saveUpdatedRound(game, updatedRound, gameId)
                 }
             }
             else -> return Entity.UNKNOWN
@@ -55,21 +55,21 @@ class GameEngine(
         return round.entitiesMap[coordinates.first][coordinates.second]
     }
 
-    fun getCurrentRound(game: Game, messageId: Long) =
-        game.rounds.maxByOrNull { it.order } ?: throw IllegalArgumentException("No round found for '$messageId'")
+    fun getCurrentRound(game: Game, gameId: String) =
+        game.rounds.maxByOrNull { it.order } ?: throw IllegalArgumentException("No round found for '$gameId'")
 
-    fun tryFinishRound(messageId: Long): Boolean {
-        val game = getGame(messageId)
-        val currentRound = getCurrentRound(game, messageId)
+    fun tryFinishRound(gameId: String): Boolean {
+        val game = getGame(gameId)
+        val currentRound = getCurrentRound(game, gameId)
         if (currentRound.locked) return false
         if (currentRound.firstUserCoordinates != null && currentRound.secondUserCoordinates != null) {
-            determineAndSaveWinner(messageId, game, currentRound)
+            determineAndSaveWinner(gameId, game, currentRound)
             return true
         }
         return false
     }
 
-    private fun determineAndSaveWinner(messageId: Long, game: Game, currentRound: Round) {
+    private fun determineAndSaveWinner(gameId: String, game: Game, currentRound: Round) {
         val (entitiesMap, firstUserCoordinates, secondUserCoordinates) = currentRound
         val firstUserChoice = entitiesMap[firstUserCoordinates!!.first][firstUserCoordinates.second]
         val secondUserChoice = entitiesMap[secondUserCoordinates!!.first][secondUserCoordinates.second]
@@ -87,33 +87,33 @@ class GameEngine(
             game.secondPlayer?.copy(score = game.secondPlayer.score + 1).also { resultGame = resultGame.copy(secondPlayer = it) }
         }
         val updatedRound = currentRound.copy(locked = true)
-        saveUpdatedRound(resultGame, updatedRound, messageId)
+        saveUpdatedRound(resultGame, updatedRound, gameId)
     }
 
-    private fun saveUpdatedRound(game: Game, updatedRound: Round, messageId: Long) {
+    private fun saveUpdatedRound(game: Game, updatedRound: Round, gameId: String) {
         game.rounds.sortedBy { it.order }.dropLast(1).toMutableList().apply { add(updatedRound) }.let { game.copy(rounds = it) }.also {
-            gamesCache.saveGame(messageId, it)
+            gamesCache.saveGame(gameId, it)
         }
     }
 
-    private fun validateRoundIsOver(messageId: Long, game: Game) {
+    private fun validateRoundIsOver(gameId: String, game: Game) {
         val lastRound = game.rounds.maxByOrNull { it.order } ?: return
         if (lastRound.firstUserCoordinates == null || lastRound.secondUserCoordinates == null) {
-            throw IllegalArgumentException("Last round of '$messageId' game is not finished yet!")
+            throw IllegalArgumentException("Last round of '$gameId' game is not finished yet!")
         }
     }
 
-    private fun addRound(game: Game, messageId: Long, round: Round) {
+    private fun addRound(game: Game, gameId: String, round: Round) {
         game.rounds.toMutableList()
             .apply { add(round) }
             .let { game.copy(rounds = it) }
             .also {
-                gamesCache.saveGame(messageId, it)
+                gamesCache.saveGame(gameId, it)
             }
     }
 
-    fun getGame(messageId: Long): Game {
-        return gamesCache.getGame(messageId) ?: throw IllegalArgumentException("Can't find game with message id '$messageId'")
+    fun getGame(gameId: String): Game {
+        return gamesCache.getGame(gameId) ?: throw IllegalArgumentException("Can't find game with message id '$gameId'")
     }
 
 }
