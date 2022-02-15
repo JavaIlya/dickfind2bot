@@ -17,7 +17,6 @@ spring:
       on-profile: heroku
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:${DATABASE_URL}
   jpa:
     properties:
       hibernate:
