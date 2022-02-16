@@ -22,6 +22,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
 import org.springframework.stereotype.Component
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
 @Component
@@ -31,6 +35,8 @@ class DickfindBot(
     private val messageBus: MessageBus,
     private val statsService: StatsService
 ) : TelegramBot(botConfig.token) {
+
+    private val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(10)
 
     @PostConstruct
     fun init() {
@@ -82,9 +88,9 @@ class DickfindBot(
         }
     }
 
-    private suspend fun sendNewRound(callbackQuery: CallbackQuery, game: Game) {
+    private fun sendNewRound(callbackQuery: CallbackQuery, game: Game) {
         val currentRound = gameEngine.getCurrentRound(game, retrieveGameId(callbackQuery.message()))
-        executeAsync(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
+        execute(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль. Раунд ${currentRound.order}
                 
                 ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
@@ -128,11 +134,10 @@ class DickfindBot(
                     addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
                 }
             }))
-            GlobalScope.launch(ExceptionLoggingContext) {
-                delay(4000)
+            executorService.schedule({
                 gameEngine.newRound(gameId)
                 sendNewRound(callbackQuery, gameEngine.getGame(gameId))
-            }
+            }, 4, TimeUnit.SECONDS)
         }
     }
 
