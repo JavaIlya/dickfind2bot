@@ -128,7 +128,7 @@ class DickfindBot(
                     addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
                 }
             }))
-            GlobalScope.launch {
+            GlobalScope.launch(ExceptionLoggingContext) {
                 delay(4000)
                 gameEngine.newRound(gameId)
                 sendNewRound(callbackQuery, gameEngine.getGame(gameId))

@@ -9,6 +9,15 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: update
+management:
+  metrics:
+    export:
+      influx:
+        enabled: false
+        api-version: V2
+        bucket: dickfind2bot
+        org: telegram-bots
+        step: 10s
 
 ---
 spring:
