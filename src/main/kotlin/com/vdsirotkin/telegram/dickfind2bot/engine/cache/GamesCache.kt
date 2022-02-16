@@ -4,8 +4,8 @@ import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 
 interface GamesCache {
 
-    fun getGame(messageId: Long): Game?
+    fun getGame(gameId: String): Game?
 
-    fun saveGame(messageId: Long, game: Game)
+    fun saveGame(gameId: String, game: Game)
 
 }
