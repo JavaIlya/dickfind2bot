@@ -21,11 +21,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Component
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import javax.annotation.PostConstruct
 
 @Component
@@ -33,10 +32,9 @@ class DickfindBot(
     botConfig: BotConfig,
     private val gameEngine: GameEngine,
     private val messageBus: MessageBus,
-    private val statsService: StatsService
+    private val statsService: StatsService,
+    @Qualifier("chatBotAfterRoundDelayExecutor") private val executorService: ThreadPoolTaskScheduler
 ) : TelegramBot(botConfig.token) {
-
-    private val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(10)
 
     @PostConstruct
     fun init() {
@@ -134,7 +132,7 @@ class DickfindBot(
                     addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
                 }
             }))
-            executorService.schedule({
+            executorService.scheduledExecutor.schedule({
                 gameEngine.newRound(gameId)
                 sendNewRound(callbackQuery, gameEngine.getGame(gameId))
             }, 4, TimeUnit.SECONDS)
