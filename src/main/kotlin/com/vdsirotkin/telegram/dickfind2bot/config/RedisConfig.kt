@@ -2,6 +2,7 @@ package com.vdsirotkin.telegram.dickfind2bot.config
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -48,7 +49,7 @@ class RedisConfig {
         return RedisTemplate<String, Game>().apply {
             keySerializer = RedisSerializer.string()
             valueSerializer = GenericJackson2JsonRedisSerializer(ObjectMapper().registerKotlinModule().apply {
-                activateDefaultTyping(this.polymorphicTypeValidator)
+                activateDefaultTyping(polymorphicTypeValidator, NON_FINAL)
             })
             setConnectionFactory(redisFactory)
         }
