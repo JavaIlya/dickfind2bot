@@ -12,7 +12,7 @@ spring:
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:password}
+    password: ${REDIS_PASSWORD:}
     database: ${REDIS_DATABASE:1}
 management:
   metrics:
@@ -29,8 +29,8 @@ spring:
   config:
     activate:
       on-profile: heroku
-  datasource:
-    driver-class-name: org.postgresql.Driver
+#  datasource:
+#    driver-class-name: org.postgresql.Driver
   jpa:
     properties:
       hibernate:

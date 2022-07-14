@@ -5,7 +5,8 @@ import java.io.Serializable
 data class Game(
         val firstPlayer: User,
         val secondPlayer: User? = null,
-        val rounds: List<Round> = emptyList()): Serializable
+        val rounds: List<Round> = emptyList()
+): Serializable
 
 
 data class User(

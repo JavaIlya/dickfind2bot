@@ -1,23 +1,15 @@
 package com.vdsirotkin.telegram.dickfind2bot.config
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping.NON_FINAL
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.vdsirotkin.telegram.dickfind2bot.engine.Game
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
+import io.lettuce.core.api.sync.RedisCommands
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.connection.RedisPassword
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration
-import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
-import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-import org.springframework.data.redis.serializer.RedisSerializer
 import java.time.Duration
 
 
@@ -34,24 +26,12 @@ class RedisConfig {
     )
 
     @Bean
-    fun redisConnectionFactory(redisConfigProperties: RedisConfigProperties): RedisConnectionFactory {
-        val clientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofSeconds(2))
-                .build()
-        val redisStandaloneConfiguration = RedisStandaloneConfiguration(redisConfigProperties.host, redisConfigProperties.port)
-        redisStandaloneConfiguration.password = RedisPassword.of(redisConfigProperties.password)
-
-        return LettuceConnectionFactory(redisStandaloneConfiguration, clientConfig)
+    fun statefulRedisConnection(config: RedisConfigProperties): RedisCommands<String, String> {
+        return RedisClient.create().connect(RedisURI(config.host, config.port, Duration.ofSeconds(10))).sync()
     }
 
     @Bean
-    fun redisTemplate(redisFactory: RedisConnectionFactory): RedisTemplate<String, Game> {
-        return RedisTemplate<String, Game>().apply {
-            keySerializer = RedisSerializer.string()
-            valueSerializer = GenericJackson2JsonRedisSerializer(ObjectMapper().registerKotlinModule().apply {
-                activateDefaultTyping(polymorphicTypeValidator, NON_FINAL)
-            })
-            setConnectionFactory(redisFactory)
-        }
+    fun objectMapper(): ObjectMapper {
+        return jacksonObjectMapper()
     }
 }
