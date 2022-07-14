@@ -12,6 +12,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.serializer.RedisSerializer
 import java.time.Duration
 
 
@@ -41,6 +42,8 @@ class RedisConfig {
     @Bean
     fun redisTemplate(redisFactory: RedisConnectionFactory): RedisTemplate<String, Game> {
         return RedisTemplate<String, Game>().apply {
+            keySerializer = RedisSerializer.string()
+            valueSerializer = RedisSerializer.json()
             setConnectionFactory(redisFactory)
         }
     }
