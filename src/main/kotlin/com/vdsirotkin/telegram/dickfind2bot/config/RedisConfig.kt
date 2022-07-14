@@ -48,7 +48,7 @@ class RedisConfig {
         return RedisTemplate<String, Game>().apply {
             keySerializer = RedisSerializer.string()
             valueSerializer = GenericJackson2JsonRedisSerializer(ObjectMapper().registerKotlinModule().apply {
-                activateDefaultTyping(this.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY)
+                activateDefaultTyping(this.polymorphicTypeValidator)
             })
             setConnectionFactory(redisFactory)
         }
