@@ -16,7 +16,7 @@ import java.time.Duration
 
 
 @Configuration
-@Profile("redis-ssl")
+@Profile("heroku")
 class RedisConfig {
 
     @ConstructorBinding
@@ -30,7 +30,6 @@ class RedisConfig {
     @Bean
     fun redisConnectionFactory(redisConfigProperties: RedisConfigProperties): RedisConnectionFactory {
         val clientConfig = LettuceClientConfiguration.builder()
-                .useSsl().disablePeerVerification().and()
                 .commandTimeout(Duration.ofSeconds(2))
                 .build()
         val redisStandaloneConfiguration = RedisStandaloneConfiguration(redisConfigProperties.host, redisConfigProperties.port)
