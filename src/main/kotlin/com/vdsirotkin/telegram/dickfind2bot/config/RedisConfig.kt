@@ -16,7 +16,7 @@ import java.time.Duration
 
 
 @Configuration
-@Profile("heroku")
+@Profile("redis-ssl")
 class RedisConfig {
 
     @ConstructorBinding
