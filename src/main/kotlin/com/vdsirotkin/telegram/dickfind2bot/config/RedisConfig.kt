@@ -1,5 +1,7 @@
 package com.vdsirotkin.telegram.dickfind2bot.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
@@ -12,6 +14,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializer
 import java.time.Duration
 
@@ -43,7 +46,7 @@ class RedisConfig {
     fun redisTemplate(redisFactory: RedisConnectionFactory): RedisTemplate<String, Game> {
         return RedisTemplate<String, Game>().apply {
             keySerializer = RedisSerializer.string()
-            valueSerializer = RedisSerializer.json()
+            valueSerializer = GenericJackson2JsonRedisSerializer(ObjectMapper().registerKotlinModule())
             setConnectionFactory(redisFactory)
         }
     }
