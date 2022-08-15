@@ -1,6 +1,12 @@
 package com.vdsirotkin.telegram.dickfind2bot.util
 
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.MapperFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.pengrad.telegrambot.Callback
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.TelegramException
@@ -53,7 +59,30 @@ private val rateLimiter = RateLimiter.of("telegram_api", RateLimiterConfig.custo
     .build())
 
 private val logger = LoggerFactory.getLogger("telegram.calls")
-private val objectMapper = jacksonObjectMapper()
+private val objectMapper = ObjectMapper()
+    .registerKotlinModule()
+    .enable(
+        DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE,
+        DeserializationFeature.READ_ENUMS_USING_TO_STRING,
+        DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY,
+        DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT,
+        DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT
+    )
+    .enable(
+        MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
+    )
+    .enable(
+        SerializationFeature.WRITE_ENUMS_USING_TO_STRING
+    )
+    .disable(
+        SerializationFeature.FAIL_ON_EMPTY_BEANS,
+        SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
+    )
+    .disable(
+        DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE,
+        DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
+    )
+    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
 fun <T : BaseRequest<T, R>, R : BaseResponse> TelegramBot.executeSafe(method: T): R {
     return retry.executeCallable {
