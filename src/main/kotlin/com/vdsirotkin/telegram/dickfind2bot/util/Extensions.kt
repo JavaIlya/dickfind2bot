@@ -48,6 +48,12 @@ private val retry = Retry.of("telegram_api", RetryConfig.custom<Any>()
             else -> true
         }
     }
+    .retryOnResult {
+        when (it) {
+            is BaseResponse -> !it.isOk
+            else -> false
+        }
+    }
     .maxAttempts(5)
     .build()
 )
