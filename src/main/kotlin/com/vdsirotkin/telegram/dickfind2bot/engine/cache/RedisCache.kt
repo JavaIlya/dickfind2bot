@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import io.lettuce.core.api.sync.RedisCommands
+import java.time.Duration
 
 class RedisCache (private val redisTemplate: RedisCommands<String, String>, private val objectMapper: ObjectMapper) : GamesCache {
 
@@ -14,6 +15,6 @@ class RedisCache (private val redisTemplate: RedisCommands<String, String>, priv
     }
 
     override fun saveGame(gameId: String, game: Game) {
-        redisTemplate.set(gameId, objectMapper.writeValueAsString(game))
+        redisTemplate.setex(gameId, Duration.ofDays(1).seconds, objectMapper.writeValueAsString(game))
     }
 }
