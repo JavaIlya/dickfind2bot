@@ -65,16 +65,17 @@ class DickfindBot(
 
     private fun handleTop(message: Message) {
         val chatId = message.chat().id()
-        statsService.getTopStats(chatId)
-            .map {
+        val text = statsService.getTopStats(chatId)
+            .mapNotNull {
                 val member = runCatching { this.executeSafe(GetChatMember(chatId, it.userId)) }.getOrNull()
                 if (member != null) {
                     member.chatMember().user().firstName() to it.wins
                 } else null
             }
-            .filterNotNull()
             .sortedByDescending { it.second }
             .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second}" }
+            .joinToString(separator = "\n")
+        executeSafe(SendMessage(chatId, text))
     }
 
     private fun startDuel(message: Message) {
@@ -88,9 +89,9 @@ class DickfindBot(
 
     private fun getStats(message: Message) {
         executeSafe(SendMessage(
-                message.chat().id(),
-                statsService.getStats(UserAndChatId(message.chat().id(), message.from().id()),
-                        message.from().firstName()))
+            message.chat().id(),
+            statsService.getStats(UserAndChatId(message.chat().id(), message.from().id()),
+                message.from().firstName()))
         );
     }
 
