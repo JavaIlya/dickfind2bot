@@ -10,6 +10,7 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.AnswerCallbackQuery
 import com.pengrad.telegrambot.request.EditMessageText
+import com.pengrad.telegrambot.request.GetChatMember
 import com.pengrad.telegrambot.request.SendMessage
 import com.vdsirotkin.telegram.dickfind2bot.config.MessageBus
 import com.vdsirotkin.telegram.dickfind2bot.engine.Entity
@@ -56,9 +57,25 @@ class DickfindBot(
         when {
             update.message()?.text()?.startsWith("/duel") == true -> startDuel(update.message())
             update.message()?.text()?.startsWith("/dickstats") == true -> getStats(update.message())
+            update.message()?.text()?.startsWith("/top") == true -> handleTop(update.message())
             update.callbackQuery()?.data()?.startsWith("join") == true -> joinGame(update.callbackQuery())
             update.callbackQuery()?.data()?.startsWith("turn") == true -> handleTurn(update.callbackQuery())
         }
+    }
+
+    private fun handleTop(message: Message) {
+        val chatId = message.chat().id()
+        val text = statsService.getTopStats(chatId)
+            .mapNotNull {
+                val member = runCatching { this.executeSafe(GetChatMember(chatId, it.userId)) }.getOrNull()
+                if (member != null) {
+                    member.chatMember().user().firstName() to it.wins
+                } else null
+            }
+            .sortedByDescending { it.second }
+            .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second}" }
+            .joinToString(separator = "\n")
+        executeSafe(SendMessage(chatId, text))
     }
 
     private fun startDuel(message: Message) {
@@ -72,9 +89,9 @@ class DickfindBot(
 
     private fun getStats(message: Message) {
         executeSafe(SendMessage(
-                message.chat().id(),
-                statsService.getStats(UserAndChatId(message.chat().id(), message.from().id()),
-                        message.from().firstName()))
+            message.chat().id(),
+            statsService.getStats(UserAndChatId(message.chat().id(), message.from().id()),
+                message.from().firstName()))
         );
     }
 

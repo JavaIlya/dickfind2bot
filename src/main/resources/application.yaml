@@ -29,8 +29,8 @@ spring:
   config:
     activate:
       on-profile: heroku
-#  datasource:
-#    driver-class-name: org.postgresql.Driver
+  datasource:
+    driver-class-name: org.postgresql.Driver
   jpa:
     properties:
       hibernate:

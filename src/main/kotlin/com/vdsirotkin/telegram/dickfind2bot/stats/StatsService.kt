@@ -1,7 +1,7 @@
 package com.vdsirotkin.telegram.dickfind2bot.stats
 
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import java.util.*
 import javax.transaction.Transactional
 
 @Service
@@ -57,7 +57,7 @@ class StatsService(
 
     fun getStats(userAndChatId: UserAndChatId, name: String): String {
         val user = statsRepository.findById(userAndChatId).orElse(null) ?:
-        return "Про тебя нет никакой инфы. Отьебись."
+            return "Про тебя нет никакой инфы. Отьебись."
 
         val totalFound = user.foundDicks + user.foundGoldenDicks + user.foundNothing;
         val totalDuels = user.wins + user.loses + user.draws;
@@ -80,5 +80,9 @@ class StatsService(
         if (desired == 0) return "0";
         val percent = (desired.toDouble() * 100 / total.toDouble());
         return String.format("%.2f", percent);
+    }
+
+    fun getTopStats(id: Long): List<TopStatsDto> {
+        return statsRepository.getTop(id, Pageable.ofSize(15)).map { TopStatsDto(it.id.userId, it.wins) }
     }
 }
