@@ -1,5 +1,6 @@
 package com.vdsirotkin.telegram.dickfind2bot.stats
 
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import javax.transaction.Transactional
 
@@ -82,6 +83,6 @@ class StatsService(
     }
 
     fun getTopStats(id: Long): List<TopStatsDto> {
-        return statsRepository.getTop(id).map { TopStatsDto(it.id.userId, it.wins) }
+        return statsRepository.getTop(id, Pageable.ofSize(15)).map { TopStatsDto(it.id.userId, it.wins) }
     }
 }
