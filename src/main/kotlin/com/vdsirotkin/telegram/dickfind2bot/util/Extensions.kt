@@ -12,6 +12,7 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.TelegramException
 import com.pengrad.telegrambot.request.BaseRequest
 import com.pengrad.telegrambot.response.BaseResponse
+import com.pengrad.telegrambot.response.GetChatMemberResponse
 import com.vdsirotkin.telegram.dickfind2bot.DickfindBot
 import io.github.resilience4j.core.IntervalFunction
 import io.github.resilience4j.ratelimiter.RateLimiter
@@ -50,6 +51,7 @@ private val retry = Retry.of("telegram_api", RetryConfig.custom<Any>()
     }
     .retryOnResult {
         when (it) {
+            is GetChatMemberResponse -> false
             is BaseResponse -> !it.isOk
             else -> false
         }
