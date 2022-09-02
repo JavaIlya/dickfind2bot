@@ -67,8 +67,8 @@ class DickfindBot(
         val chatId = message.chat().id()
         val text = statsService.getTopStats(chatId)
             .mapNotNull {
-                val member = runCatching { this.executeSafe(GetChatMember(chatId, it.userId)) }.getOrNull()
-                if (member != null) {
+                val member = this.executeSafe(GetChatMember(chatId, it.userId))
+                if (member != null && member.isOk) {
                     member.chatMember().user().firstName() to it.wins
                 } else null
             }
