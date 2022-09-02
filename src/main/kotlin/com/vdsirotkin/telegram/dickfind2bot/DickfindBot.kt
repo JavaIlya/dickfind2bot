@@ -69,11 +69,11 @@ class DickfindBot(
             .mapNotNull {
                 val member = this.executeSafe(GetChatMember(chatId, it.userId))
                 if (member != null && member.isOk) {
-                    member.chatMember().user().firstName() to it.wins
+                    member.chatMember().user().firstName() to it
                 } else null
             }
-            .sortedByDescending { it.second }
-            .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second}" }
+            .sortedByDescending { it.second.wins }
+            .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second.wins} (${pair.second.winrate})" }
             .joinToString(separator = "\n")
         executeSafe(SendMessage(chatId, text))
     }

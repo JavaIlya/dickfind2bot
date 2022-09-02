@@ -22,6 +22,8 @@ data class StatsEntity(
     constructor(id: UserAndChatId) : this(id, 0, 0, 0, 0, 0, 0)
 }
 
+fun StatsEntity.totalDuels() = wins + loses + draws
+
 @Embeddable
 data class UserAndChatId(
     val chatId: Long,

@@ -60,7 +60,7 @@ class StatsService(
             return "Про тебя нет никакой инфы. Отьебись."
 
         val totalFound = user.foundDicks + user.foundGoldenDicks + user.foundNothing;
-        val totalDuels = user.wins + user.loses + user.draws;
+        val totalDuels = user.totalDuels()
 
         return """
              Стата пользователя $name
@@ -83,6 +83,8 @@ class StatsService(
     }
 
     fun getTopStats(id: Long): List<TopStatsDto> {
-        return statsRepository.getTop(id, Pageable.ofSize(15)).map { TopStatsDto(it.id.userId, it.wins) }
+        return statsRepository.getTop(id, Pageable.ofSize(15)).map {
+            TopStatsDto(it.id.userId, it.wins, getPercent(it.totalDuels(), it.wins))
+        }
     }
 }
