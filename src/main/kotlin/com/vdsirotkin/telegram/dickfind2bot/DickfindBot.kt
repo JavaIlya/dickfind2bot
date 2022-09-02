@@ -73,7 +73,7 @@ class DickfindBot(
                 } else null
             }
             .sortedByDescending { it.second.wins }
-            .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second.wins} (${pair.second.winrate})" }
+            .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second.wins} (${pair.second.winrate}%)" }
             .joinToString(separator = "\n")
         executeSafe(SendMessage(chatId, text))
     }
