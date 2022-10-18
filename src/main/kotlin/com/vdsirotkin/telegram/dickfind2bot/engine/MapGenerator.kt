@@ -77,7 +77,7 @@ class MapGenerator(
         val row: Int = (0..2).random()
         val cell: Int = (0..2).random()
 
-        if (map[row][cell] == Entity.GOLDEN_DICK) {
+        if (map[row][cell] == Entity.GOLDEN_DICK || map[row][cell] == Entity.BOMB) {
             return populateSimpleDickInMap(map)
         }
 

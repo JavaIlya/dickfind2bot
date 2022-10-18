@@ -197,10 +197,10 @@ class DickfindBot(
     }
 
     private fun handleImmediateLose(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
-        val (winner, loser) = if (game.firstPlayer.score < 0) {
-            game.firstPlayer to game.secondPlayer!!
+        val (winner, loser) = if (game.secondPlayer!!.score < 0) {
+            game.firstPlayer to game.secondPlayer
         } else {
-            game.secondPlayer!! to game.firstPlayer
+            game.secondPlayer to game.firstPlayer
         }
         executeSafe(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль. Раунд ${currentRound.order}
