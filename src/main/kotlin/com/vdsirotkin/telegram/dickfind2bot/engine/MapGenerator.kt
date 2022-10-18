@@ -15,7 +15,7 @@ class MapGenerator(
             Array(3) { Entity.values().filter { it != Entity.UNKNOWN && it != Entity.GOLDEN_DICK }.random() }
         }
         val shouldHaveGoldenDick = shouldHaveGoldenDick()
-        val shouldHaveBomb = shouldHaveGoldenDick()
+        val shouldHaveBomb = shouldHaveBomb()
         val hasAtLeastOneDick = hasAtLeastOneDick(map)
         val hasAtLeastOneNothing = hasAtLeastOneNothing(map)
 
@@ -48,6 +48,10 @@ class MapGenerator(
 
     private fun shouldHaveGoldenDick(): Boolean {
         return Random.Default.nextDouble() <= botConfig.goldenDickChance
+    }
+
+    private fun shouldHaveBomb(): Boolean {
+        return Random.Default.nextDouble() <= botConfig.bombChance
     }
 
     private fun hasAtLeastOneNothing(map: Array<Array<Entity>>): Boolean {
