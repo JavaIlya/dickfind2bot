@@ -12,6 +12,7 @@ data class StatsEntity(
     val foundDicks: Int,
     val foundGoldenDicks: Int,
     val foundNothing: Int,
+    val foundBombs: Int,
     val wins: Int,
     val loses: Int,
     val draws: Int,
@@ -19,7 +20,7 @@ data class StatsEntity(
     @Version
     val version: Long = -1
 ) {
-    constructor(id: UserAndChatId) : this(id, 0, 0, 0, 0, 0, 0)
+    constructor(id: UserAndChatId) : this(id, 0, 0, 0, 0, 0, 0, 0)
 }
 
 fun StatsEntity.totalDuels() = wins + loses + draws

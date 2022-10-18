@@ -17,6 +17,11 @@ data class FoundNothingEvent(
     val userId: Long
 ) : Event
 
+data class FoundBombEvent(
+    val chatId: Long,
+    val userId: Long
+) : Event
+
 data class GameFinishedEvent(
     val chatId: Long,
     val userWonId: Long,
@@ -24,7 +29,13 @@ data class GameFinishedEvent(
 ) : Event
 
 data class GameFinishedDrawEvent(
-        val chatId: Long,
-        val firstUserId: Long,
-        val secondUserId: Long
+    val chatId: Long,
+    val firstUserId: Long,
+    val secondUserId: Long
 ) : Event
+
+data class GameFinishedBothLoseEvent(
+    val chatId: Long,
+    val firstUserId: Long,
+    val secondUserId: Long
+)

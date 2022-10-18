@@ -81,6 +81,12 @@ class GameEngine(
         if (secondUserChoice == Entity.GOLDEN_DICK) {
             game.secondPlayer?.copy(score = game.secondPlayer.score + 9).also { resultGame = resultGame.copy(secondPlayer = it) }
         }
+        if (firstUserChoice == Entity.BOMB) {
+            game.firstPlayer.copy(score = -1).also { resultGame = resultGame.copy(firstPlayer = it) }
+        }
+        if (secondUserChoice == Entity.BOMB) {
+            game.secondPlayer?.copy(score = -1).also { resultGame = resultGame.copy(secondPlayer = it) }
+        }
         if (firstUserChoice == Entity.DICK && secondUserChoice == Entity.NOTHING) {
             game.firstPlayer.copy(score = game.firstPlayer.score + 1).also { resultGame = resultGame.copy(firstPlayer = it) }
         } else if (firstUserChoice == Entity.NOTHING && secondUserChoice == Entity.DICK) {

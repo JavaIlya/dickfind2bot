@@ -34,6 +34,14 @@ class StatsService(
     }
 
     @Transactional
+    fun incrementBombs(id: UserAndChatId) {
+        val entity = statsRepository.findById(id).orElse(StatsEntity(id))
+        entity.copy(foundBombs = entity.foundBombs + 1).also {
+            statsRepository.save(it)
+        }
+    }
+
+    @Transactional
     fun saveGameResults(winnerId: UserAndChatId, loserId: UserAndChatId) {
         val winner = statsRepository.findById(winnerId).orElseThrow { throw IllegalArgumentException("Can't find stats for winner $winnerId") }
         winner.copy(wins = winner.wins + 1).also {
@@ -50,6 +58,16 @@ class StatsService(
         val players = statsRepository.findAllById(listOf(firstUser, secondUser));
         players.forEach {
             it.copy(draws = it.draws + 1).also {
+                statsRepository.save(it)
+            }
+        };
+    }
+
+    @Transactional
+    fun saveBothLose(firstUser: UserAndChatId, secondUser: UserAndChatId) {
+        val players = statsRepository.findAllById(listOf(firstUser, secondUser));
+        players.forEach {
+            it.copy(draws = it.loses + 1).also {
                 statsRepository.save(it)
             }
         };

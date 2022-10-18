@@ -27,6 +27,7 @@ enum class Entity(val value: String) {
     DICK("\uD83C\uDF46"),
     NOTHING("💨"),
     GOLDEN_DICK("\uD83C\uDF4C"),
+    BOMB("\uD83D\uDCA3"),
     UNKNOWN("\uD83D\uDCE6");
 
     override fun toString(): String {

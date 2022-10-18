@@ -29,6 +29,13 @@ class StatsEventsHandlers(
         statsService.incrementNothing(id)
     }
 
+    @EventListener(FoundBombEvent::class)
+    fun foundBombEventHandler(event: FoundBombEvent) {
+        val (chatId, userId) = event
+        val id = UserAndChatId(chatId, userId)
+        statsService.incrementBombs(id)
+    }
+
     @EventListener(GameFinishedEvent::class)
     fun gameFinishedEventHandler(event: GameFinishedEvent) {
         val chatId = event.chatId
@@ -43,6 +50,14 @@ class StatsEventsHandlers(
         val firstPlayerId = UserAndChatId(chatId, event.firstUserId)
         val secondPlayerId = UserAndChatId(chatId, event.secondUserId)
         statsService.saveDrawGameResults(firstPlayerId, secondPlayerId);
+    }
+
+    @EventListener(GameFinishedBothLoseEvent::class)
+    fun handleGameFinishedBothLoseEvent(event: GameFinishedBothLoseEvent) {
+        val chatId = event.chatId
+        val firstPlayerId = UserAndChatId(chatId, event.firstUserId)
+        val secondPlayerId = UserAndChatId(chatId, event.secondUserId)
+        statsService.saveBothLose(firstPlayerId, secondPlayerId);
     }
 
 }
