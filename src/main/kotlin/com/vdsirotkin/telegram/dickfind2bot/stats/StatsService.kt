@@ -67,7 +67,7 @@ class StatsService(
     fun saveBothLose(firstUser: UserAndChatId, secondUser: UserAndChatId) {
         val players = statsRepository.findAllById(listOf(firstUser, secondUser));
         players.forEach {
-            it.copy(draws = it.loses + 1).also {
+            it.copy(loses = it.loses + 1).also {
                 statsRepository.save(it)
             }
         };
