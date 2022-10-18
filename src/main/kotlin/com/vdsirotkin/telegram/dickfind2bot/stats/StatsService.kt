@@ -85,6 +85,7 @@ class StatsService(
             
              Найдено членов: ${user.foundDicks} (${getPercent(totalFound, user.foundDicks)}%)
              Найдено ЗОЛОТЫХ членов: ${user.foundGoldenDicks} (${getPercent(totalFound, user.foundGoldenDicks)}%)
+             Найдено бомб: ${user.foundBombs} (${getPercent(totalFound, user.foundBombs)}%)
              Найдено пустых коробок: ${user.foundNothing} (${getPercent(totalFound, user.foundNothing)}%)
              
              Дуэли:
