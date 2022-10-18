@@ -7,5 +7,6 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConfigurationProperties(prefix = "bot")
 data class BotConfig(
     val token: String,
-    val goldenDickChance: Double
+    val goldenDickChance: Double,
+    val bombChance: Double
 )

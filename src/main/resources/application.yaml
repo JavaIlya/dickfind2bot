@@ -1,6 +1,7 @@
 bot:
   token: ${BOT_TOKEN}
   goldenDickChance: 0.05
+  bombChance: 0.05
 
 spring:
   datasource:

@@ -127,12 +127,14 @@ class DickfindBot(
             Entity.DICK -> messageBus.publish(FoundDickEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
             Entity.NOTHING -> messageBus.publish(FoundNothingEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
             Entity.GOLDEN_DICK -> messageBus.publish(FoundGoldenDickEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
+            Entity.BOMB -> messageBus.publish(FoundBombEvent(callbackQuery.message().chat().id(), callbackQuery.from().id()))
+            else -> {}
         }
         val roundFinished = gameEngine.tryFinishRound(gameId)
         if (roundFinished) {
             val game = gameEngine.getGame(gameId)
             val currentRound = gameEngine.getCurrentRound(game, gameId)
-            if (game.firstPlayer.score >= 3 || game.secondPlayer!!.score >= 3) {
+            if (game.firstPlayer.score >= 3 || game.secondPlayer!!.score >= 3 || game.firstPlayer.score < 0 || game.secondPlayer.score < 0) {
                 handleFinishGame(callbackQuery, game, currentRound)
                 return
             }
@@ -156,6 +158,66 @@ class DickfindBot(
         }
     }
 
+    private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
+        val firstPlayerScore = game.firstPlayer.score
+        val secondPlayerScore = game.secondPlayer!!.score
+        if (firstPlayerScore == secondPlayerScore && firstPlayerScore >= 0) {
+            handleDraw(callbackQuery, game, currentRound)
+            return
+        } else if (firstPlayerScore == secondPlayerScore) {
+            handleBothLose(callbackQuery, game, currentRound)
+            return
+        }
+        if (firstPlayerScore < 0 || secondPlayerScore < 0) {
+            handleImmediateLose(callbackQuery, game, currentRound)
+            return
+        }
+        handleDefaultFinish(callbackQuery, game, currentRound)
+    }
+
+    private fun handleDefaultFinish(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
+        val (winner, loser) = if (game.firstPlayer.score > game.secondPlayer!!.score) {
+            game.firstPlayer to game.secondPlayer
+        } else {
+            game.secondPlayer to game.firstPlayer
+        }
+        executeSafe(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
+                Дуэль. Раунд ${currentRound.order}
+                
+                ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
+                ${game.secondPlayer.firstName} - ${game.secondPlayer.score}/3
+                
+                Победитель - ${winner.firstName}
+            """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
+            currentRound.entitiesMap.forEach {
+                addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
+            }
+        }))
+        messageBus.publish(GameFinishedEvent(callbackQuery.message().chat().id(), winner.chatId, loser.chatId))
+    }
+
+    private fun handleImmediateLose(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
+        val (winner, loser) = if (game.firstPlayer.score < 0) {
+            game.firstPlayer to game.secondPlayer!!
+        } else {
+            game.secondPlayer!! to game.firstPlayer
+        }
+        executeSafe(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
+                Дуэль. Раунд ${currentRound.order}
+                
+                ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
+                ${game.secondPlayer.firstName} - ${game.secondPlayer.score}/3
+                
+                Хааааа, ${loser.firstName} вьебал бомбу, лох блять.
+                Победитель - ${winner.firstName}
+            """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
+            currentRound.entitiesMap.forEach {
+                addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
+            }
+        }))
+        messageBus.publish(GameFinishedEvent(callbackQuery.message().chat().id(), winner.chatId, loser.chatId))
+    }
+
     private fun handleDraw(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
         executeSafe(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль. Раунд ${currentRound.order}
@@ -172,29 +234,20 @@ class DickfindBot(
         messageBus.publish(GameFinishedDrawEvent(callbackQuery.message().chat().id(), game.firstPlayer.chatId, game.secondPlayer.chatId))
     }
 
-    private fun handleFinishGame(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
-        if (game.firstPlayer.score == game.secondPlayer!!.score && game.firstPlayer.score >= 3) {
-            handleDraw(callbackQuery, game, currentRound);
-            return;
-        }
-        val (winner, loser) = if (game.firstPlayer.score >= 3 && game.firstPlayer.score > game.secondPlayer.score) {
-            game.firstPlayer to game.secondPlayer!!
-        } else {
-            game.secondPlayer!! to game.firstPlayer
-        }
+    private fun handleBothLose(callbackQuery: CallbackQuery, game: Game, currentRound: Round) {
         executeSafe(EditMessageText(callbackQuery.message().chat().id(), callbackQuery.message().messageId(), """
                 Дуэль. Раунд ${currentRound.order}
                 
                 ${game.firstPlayer.firstName} - ${game.firstPlayer.score}/3
-                ${game.secondPlayer.firstName} - ${game.secondPlayer.score}/3
+                ${game.secondPlayer!!.firstName} - ${game.secondPlayer.score}/3
                 
-                Победитель - ${winner.firstName}
+                Ебать, оба долбоеба проиграли ахахахаха)))
             """.trimIndent()).replyMarkup(InlineKeyboardMarkup().apply {
             currentRound.entitiesMap.forEach {
                 addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
             }
         }))
-        messageBus.publish(GameFinishedEvent(callbackQuery.message().chat().id(), winner.chatId, loser.chatId))
+        messageBus.publish(GameFinishedDrawEvent(callbackQuery.message().chat().id(), game.firstPlayer.chatId, game.secondPlayer.chatId))
     }
 
     private fun isGroup(update: Update): Boolean {
