@@ -12,7 +12,7 @@ class MapGenerator(
 
     fun generateNewMap(): Array<Array<Entity>> {
         val map = Array(3) {
-            Array(3) { Entity.values().filter { it != Entity.UNKNOWN && it != Entity.GOLDEN_DICK }.random() }
+            Array(3) { listOf(Entity.NOTHING, Entity.DICK).random() }
         }
         val shouldHaveGoldenDick = shouldHaveGoldenDick()
         val shouldHaveBomb = shouldHaveBomb()
