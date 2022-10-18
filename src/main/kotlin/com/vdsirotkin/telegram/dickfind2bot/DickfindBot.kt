@@ -247,7 +247,7 @@ class DickfindBot(
                 addRow(*it.map { InlineKeyboardButton(it.value).callbackData("placeholder") }.toTypedArray())
             }
         }))
-        messageBus.publish(GameFinishedDrawEvent(callbackQuery.message().chat().id(), game.firstPlayer.chatId, game.secondPlayer.chatId))
+        messageBus.publish(GameFinishedBothLoseEvent(callbackQuery.message().chat().id(), game.firstPlayer.chatId, game.secondPlayer.chatId))
     }
 
     private fun isGroup(update: Update): Boolean {

@@ -38,4 +38,4 @@ data class GameFinishedBothLoseEvent(
     val chatId: Long,
     val firstUserId: Long,
     val secondUserId: Long
-)
+) : Event
