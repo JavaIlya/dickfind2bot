@@ -97,7 +97,12 @@ class DickfindBot(
 
     private fun joinGame(callbackQuery: CallbackQuery) {
         val gameID = retrieveGameId(callbackQuery.message())
-        val game = gameEngine.secondPlayerJoin(gameID, callbackQuery.from().id(), callbackQuery.from().firstName())
+        val userId = callbackQuery.from().id()
+        var game = gameEngine.getGame(gameID)
+        if (game.firstPlayer.chatId == userId || game.secondPlayer != null) {
+            return
+        }
+        game = gameEngine.secondPlayerJoin(gameID, userId, callbackQuery.from().firstName())
         if (game.secondPlayer != null) {
             sendNewRound(callbackQuery, game)
         }

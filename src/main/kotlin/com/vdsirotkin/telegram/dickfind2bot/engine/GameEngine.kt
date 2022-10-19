@@ -15,9 +15,6 @@ class GameEngine(
 
     fun secondPlayerJoin(gameId: String, userId: Long, firstName: String): Game {
         val game = getGame(gameId)
-        if (game.firstPlayer.chatId == userId) {
-            return game
-        }
         val updatedGame = game.copy(secondPlayer = User(userId, firstName))
         gamesCache.saveGame(gameId, updatedGame)
         newRound(gameId)
