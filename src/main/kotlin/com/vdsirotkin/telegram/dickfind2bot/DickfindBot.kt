@@ -20,6 +20,7 @@ import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
 import com.vdsirotkin.telegram.dickfind2bot.engine.Round
 import com.vdsirotkin.telegram.dickfind2bot.stats.*
 import com.vdsirotkin.telegram.dickfind2bot.util.executeSafe
+import com.vdsirotkin.telegram.dickfind2bot.util.trueFirstName
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
@@ -69,7 +70,7 @@ class DickfindBot(
             .mapNotNull {
                 val member = this.executeSafe(GetChatMember(chatId, it.userId))
                 if (member != null && member.isOk) {
-                    member.chatMember().user().firstName() to it
+                    member.chatMember().user().trueFirstName() to it
                 } else null
             }
             .sortedByDescending { it.second.wins }
@@ -81,17 +82,17 @@ class DickfindBot(
     private fun startDuel(message: Message) {
         val response = executeSafe(SendMessage(
             message.chat().id(),
-            "${message.from().firstName()} хочет поискать писюны. Кто тож?"
+            "${message.from().trueFirstName()} хочет поискать писюны. Кто тож?"
         ).replyMarkup(InlineKeyboardMarkup().addRow(InlineKeyboardButton("Присоединиться").callbackData("join"))))
         val gameId = retrieveGameId(response.message())
-        gameEngine.startNewEmptyGame(gameId, message.from().id(), message.from().firstName())
+        gameEngine.startNewEmptyGame(gameId, message.from().id(), message.from().trueFirstName())
     }
 
     private fun getStats(message: Message) {
         executeSafe(SendMessage(
             message.chat().id(),
             statsService.getStats(UserAndChatId(message.chat().id(), message.from().id()),
-                message.from().firstName()))
+                message.from().trueFirstName()))
         );
     }
 
@@ -102,7 +103,7 @@ class DickfindBot(
         if (game.firstPlayer.chatId == userId || game.secondPlayer != null) {
             return
         }
-        game = gameEngine.secondPlayerJoin(gameID, userId, callbackQuery.from().firstName())
+        game = gameEngine.secondPlayerJoin(gameID, userId, callbackQuery.from().trueFirstName())
         if (game.secondPlayer != null) {
             sendNewRound(callbackQuery, game)
         }

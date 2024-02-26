@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.pengrad.telegrambot.Callback
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.TelegramException
+import com.pengrad.telegrambot.model.User
 import com.pengrad.telegrambot.request.BaseRequest
 import com.pengrad.telegrambot.response.BaseResponse
 import com.pengrad.telegrambot.response.GetChatMemberResponse
@@ -102,3 +103,7 @@ fun <T : BaseRequest<T, R>, R : BaseResponse> TelegramBot.executeSafe(method: T)
         }
     }
 }
+
+fun User?.trueFirstName() = this?.firstName().let {
+    if (it == "Oleksandr") "Oleg" else it
+}.orEmpty()
