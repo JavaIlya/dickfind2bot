@@ -2,10 +2,9 @@ package com.vdsirotkin.telegram.dickfind2bot
 
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.UpdatesListener
-import com.pengrad.telegrambot.model.CallbackQuery
-import com.pengrad.telegrambot.model.Chat
-import com.pengrad.telegrambot.model.Message
-import com.pengrad.telegrambot.model.Update
+import com.pengrad.telegrambot.model.*
+import com.pengrad.telegrambot.model.MessageEntity.Type.mention
+import com.pengrad.telegrambot.model.MessageEntity.Type.text_mention
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.request.AnswerCallbackQuery
@@ -13,11 +12,9 @@ import com.pengrad.telegrambot.request.EditMessageText
 import com.pengrad.telegrambot.request.GetChatMember
 import com.pengrad.telegrambot.request.SendMessage
 import com.vdsirotkin.telegram.dickfind2bot.config.MessageBus
-import com.vdsirotkin.telegram.dickfind2bot.engine.Entity
+import com.vdsirotkin.telegram.dickfind2bot.engine.*
 import com.vdsirotkin.telegram.dickfind2bot.engine.Entity.UNKNOWN
 import com.vdsirotkin.telegram.dickfind2bot.engine.Game
-import com.vdsirotkin.telegram.dickfind2bot.engine.GameEngine
-import com.vdsirotkin.telegram.dickfind2bot.engine.Round
 import com.vdsirotkin.telegram.dickfind2bot.stats.*
 import com.vdsirotkin.telegram.dickfind2bot.util.executeSafe
 import com.vdsirotkin.telegram.dickfind2bot.util.trueFirstName
@@ -80,12 +77,25 @@ class DickfindBot(
     }
 
     private fun startDuel(message: Message) {
+        val entity = message.entities().firstOrNull { it.type() in arrayOf(mention, text_mention) }
+        val invitedPlayer = if (entity != null) {
+            when (entity.type()) {
+                mention -> {
+                    val username = message.text().substring(entity.offset()).take(entity.length()).substringAfter('@')
+                    InvitedPlayer.Username(username)
+                }
+                text_mention -> {
+                    InvitedPlayer.ChatId(entity.user().id())
+                }
+                else -> null
+            }
+        } else null
         val response = executeSafe(SendMessage(
             message.chat().id(),
             "${message.from().trueFirstName()} хочет поискать писюны. Кто тож?"
         ).replyMarkup(InlineKeyboardMarkup().addRow(InlineKeyboardButton("Присоединиться").callbackData("join"))))
         val gameId = retrieveGameId(response.message())
-        gameEngine.startNewEmptyGame(gameId, message.from().id(), message.from().trueFirstName())
+        gameEngine.startNewEmptyGame(gameId, message.from().id(), message.from().trueFirstName(), invitedPlayer)
     }
 
     private fun getStats(message: Message) {
@@ -102,6 +112,19 @@ class DickfindBot(
         var game = gameEngine.getGame(gameID)
         if (game.firstPlayer.chatId == userId || game.secondPlayer != null) {
             return
+        }
+        when (val invitedPlayer = game.invitedPlayer) {
+            is InvitedPlayer.ChatId -> {
+                if (invitedPlayer.chatId != userId) {
+                    return
+                }
+            }
+            is InvitedPlayer.Username -> {
+                if (callbackQuery.from().username() != invitedPlayer.username) {
+                    return
+                }
+            }
+            null -> {}
         }
         game = gameEngine.secondPlayerJoin(gameID, userId, callbackQuery.from().trueFirstName())
         if (game.secondPlayer != null) {

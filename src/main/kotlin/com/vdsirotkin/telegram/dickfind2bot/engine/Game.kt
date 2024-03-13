@@ -2,10 +2,16 @@ package com.vdsirotkin.telegram.dickfind2bot.engine
 
 import java.io.Serializable
 
+sealed interface InvitedPlayer {
+    data class ChatId(val chatId: Long) : InvitedPlayer
+    data class Username(val username: String) : InvitedPlayer
+}
+
 data class Game(
         val firstPlayer: User,
         val secondPlayer: User? = null,
-        val rounds: List<Round> = emptyList()
+        val rounds: List<Round> = emptyList(),
+        val invitedPlayer: InvitedPlayer? = null,
 ): Serializable
 
 

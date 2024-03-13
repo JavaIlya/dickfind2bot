@@ -9,8 +9,8 @@ class GameEngine(
     private val gamesCache: GamesCache
 ) {
 
-    fun startNewEmptyGame(gameId: String, userId: Long, firstName: String) {
-        gamesCache.saveGame(gameId, Game(User(userId, firstName)))
+    fun startNewEmptyGame(gameId: String, userId: Long, firstName: String, invitedPlayer: InvitedPlayer?) {
+        gamesCache.saveGame(gameId, Game(User(userId, firstName), invitedPlayer = invitedPlayer))
     }
 
     fun secondPlayerJoin(gameId: String, userId: Long, firstName: String): Game {
