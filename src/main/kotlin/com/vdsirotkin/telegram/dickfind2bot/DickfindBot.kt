@@ -94,8 +94,8 @@ class DickfindBot(
             "${message.from().trueFirstName()} хочет поискать писюны. Кто тож?"
         } else {
             when (invitedPlayer) {
-                is InvitedPlayer.ChatId -> "\"${message.from().trueFirstName()} хочет поискать писюны c ${invitedPlayer.firstName}. Не лезьте блять.\""
-                is InvitedPlayer.Username -> "\"${message.from().trueFirstName()} хочет поискать писюны c @${invitedPlayer.username}. Не лезьте блять.\""
+                is InvitedPlayer.ChatId -> "${message.from().trueFirstName()} хочет поискать писюны c ${invitedPlayer.firstName}. Не лезьте блять."
+                is InvitedPlayer.Username -> "${message.from().trueFirstName()} хочет поискать писюны c @${invitedPlayer.username}. Не лезьте блять."
             }
         }
         val response = executeSafe(SendMessage(
