@@ -12,9 +12,9 @@ class InvitedPlayerTest {
 
     @Test
     fun `test serialization and deserialization`() {
-        objectMapper.writeValueAsString(InvitedPlayer.ChatId(123L))
+        objectMapper.writeValueAsString(InvitedPlayer.ChatId(123L, "dalbaeb"))
             .also { println(it) }
-        val result = objectMapper.readValue<InvitedPlayer>("""{"@class":"com.vdsirotkin.telegram.dickfind2bot.engine.InvitedPlayer${"$"}ChatId","chatId":123}""")
+        val result = objectMapper.readValue<InvitedPlayer>("""{"@class":"com.vdsirotkin.telegram.dickfind2bot.engine.InvitedPlayer${"$"}ChatId","chatId":123,"firstName":"dalbaeb"}""")
 
         Assertions.assertTrue(result is InvitedPlayer.ChatId)
     }
