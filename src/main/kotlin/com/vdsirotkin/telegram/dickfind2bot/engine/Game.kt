@@ -5,7 +5,7 @@ import java.io.Serializable
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 sealed interface InvitedPlayer {
-    data class ChatId(val chatId: Long) : InvitedPlayer
+    data class ChatId(val chatId: Long, val firstName: String) : InvitedPlayer
     data class Username(val username: String) : InvitedPlayer
 }
 

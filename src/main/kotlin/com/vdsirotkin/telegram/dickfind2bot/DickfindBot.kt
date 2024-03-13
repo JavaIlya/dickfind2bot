@@ -85,14 +85,22 @@ class DickfindBot(
                     InvitedPlayer.Username(username)
                 }
                 text_mention -> {
-                    InvitedPlayer.ChatId(entity.user().id())
+                    InvitedPlayer.ChatId(entity.user().id(), entity.user().trueFirstName())
                 }
                 else -> null
             }
         } else null
+        val messageText = if (invitedPlayer == null) {
+            "${message.from().trueFirstName()} хочет поискать писюны. Кто тож?"
+        } else {
+            when (invitedPlayer) {
+                is InvitedPlayer.ChatId -> "\"${message.from().trueFirstName()} хочет поискать писюны c ${invitedPlayer.firstName}. Не лезьте блять.\""
+                is InvitedPlayer.Username -> "\"${message.from().trueFirstName()} хочет поискать писюны c @${invitedPlayer.username}. Не лезьте блять.\""
+            }
+        }
         val response = executeSafe(SendMessage(
             message.chat().id(),
-            "${message.from().trueFirstName()} хочет поискать писюны. Кто тож?"
+            messageText
         ).replyMarkup(InlineKeyboardMarkup().addRow(InlineKeyboardButton("Присоединиться").callbackData("join"))))
         val gameId = retrieveGameId(response.message())
         gameEngine.startNewEmptyGame(gameId, message.from().id(), message.from().trueFirstName(), invitedPlayer)
