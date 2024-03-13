@@ -1,7 +1,9 @@
 package com.vdsirotkin.telegram.dickfind2bot.engine
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import java.io.Serializable
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 sealed interface InvitedPlayer {
     data class ChatId(val chatId: Long) : InvitedPlayer
     data class Username(val username: String) : InvitedPlayer
