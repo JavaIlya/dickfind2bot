@@ -15,15 +15,6 @@ spring:
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
     database: ${REDIS_DATABASE:1}
-management:
-  metrics:
-    export:
-      influx:
-        enabled: false
-        api-version: V2
-        bucket: dickfind2bot
-        org: telegram-bots
-        step: 10s
 
 ---
 spring:

@@ -20,7 +20,7 @@ WORKDIR /sources
 COPY . /sources/
 COPY --from=deps /deps/.m2 /sources/.m2
 
-RUN mvn clean package -DskipTests -s /settings/settings.xml
+RUN mvn clean package -DskipTests -Pheroku -s /settings/settings.xml
 
 FROM azul/zulu-openjdk-alpine:21.0.1-21.30.15-jre-headless
 
