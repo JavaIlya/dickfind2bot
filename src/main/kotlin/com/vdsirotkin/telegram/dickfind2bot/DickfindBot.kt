@@ -19,10 +19,12 @@ import com.vdsirotkin.telegram.dickfind2bot.stats.*
 import com.vdsirotkin.telegram.dickfind2bot.util.executeSafe
 import com.vdsirotkin.telegram.dickfind2bot.util.trueFirstName
 import jakarta.annotation.PostConstruct
+import kotlinx.coroutines.*
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Component
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
@@ -33,6 +35,8 @@ class DickfindBot(
     private val statsService: StatsService,
     @Qualifier("chatBotAfterRoundDelayExecutor") private val executorService: ThreadPoolTaskScheduler
 ) : TelegramBot(botConfig.token) {
+
+    private val scope = CoroutineScope(Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher())
 
     @PostConstruct
     fun init() {
@@ -61,15 +65,21 @@ class DickfindBot(
         }
     }
 
-    private fun handleTop(message: Message) {
+    private fun handleTop(message: Message) = runBlocking {
         val chatId = message.chat().id()
         val text = statsService.getTopStats(chatId)
-            .mapNotNull {
-                val member = this.executeSafe(GetChatMember(chatId, it.userId))
-                if (member != null && member.isOk) {
-                    member.chatMember().user().trueFirstName() to it
-                } else null
-            }
+            .map {
+                scope.async {
+                    val member = executeSafe(GetChatMember(chatId, it.userId))
+                    if (member != null && member.isOk) {
+                        member.chatMember().user().trueFirstName() to it
+                    } else {
+                        logger().warn { "Can't get chat member for user ${it.userId}: ${member.errorCode()} - ${member.description()}" }
+                        null
+                    }
+                }
+            }.awaitAll()
+            .filterNotNull()
             .sortedByDescending { it.second.wins }
             .mapIndexed { index, pair -> "${index + 1}. ${pair.first} - ${pair.second.wins} (${pair.second.winrate}%)" }
             .joinToString(separator = "\n")

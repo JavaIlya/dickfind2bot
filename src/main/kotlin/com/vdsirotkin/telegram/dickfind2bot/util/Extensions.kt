@@ -96,9 +96,11 @@ private val objectMapper = ObjectMapper()
 fun <T : BaseRequest<T, R>, R : BaseResponse> TelegramBot.executeSafe(method: T): R {
     return retry.executeCallable {
         rateLimiter.executeCallable {
-            logger.info("Request: ${objectMapper.writeValueAsString(method)}")
             val resp = execute(method)
-            logger.info("Response: ${objectMapper.writeValueAsString(resp)}")
+            if (!resp.isOk) {
+                logger.info("Request: ${objectMapper.writeValueAsString(method)}")
+                logger.info("Response: ${resp.errorCode()} - ${resp.description()} - ${resp.parameters()}")
+            }
             resp
         }
     }
