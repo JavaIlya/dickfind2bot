@@ -14,7 +14,7 @@
 	<name>dickfind2bot</name>
 	<description>dickfind2bot</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>21</java.version>
 		<kotlin.version>1.9.23</kotlin.version>
 	</properties>
 	<dependencies>
@@ -111,7 +111,7 @@
 	</profiles>
 
 	<build>
-		<finalName>${project.artifactId}</finalName>
+		<finalName>service</finalName>
 		<sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
 		<testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
 		<plugins>
