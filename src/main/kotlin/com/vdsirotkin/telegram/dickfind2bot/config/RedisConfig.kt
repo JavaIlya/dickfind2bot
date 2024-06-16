@@ -6,7 +6,6 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.sync.RedisCommands
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -17,7 +16,6 @@ import java.time.Duration
 @Profile("heroku")
 class RedisConfig {
 
-    @ConstructorBinding
     @ConfigurationProperties("spring.redis")
     data class RedisConfigProperties(
             val host: String,

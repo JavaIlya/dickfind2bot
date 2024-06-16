@@ -1,8 +1,8 @@
 package com.vdsirotkin.telegram.dickfind2bot.stats
 
+import jakarta.transaction.Transactional
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import javax.transaction.Transactional
 
 @Service
 class StatsService(

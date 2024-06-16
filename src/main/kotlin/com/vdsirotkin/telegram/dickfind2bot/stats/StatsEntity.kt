@@ -1,7 +1,7 @@
 package com.vdsirotkin.telegram.dickfind2bot.stats
 
 import java.io.Serializable
-import javax.persistence.*
+import jakarta.persistence.*
 
 @Entity
 @Table(name = "statistics")

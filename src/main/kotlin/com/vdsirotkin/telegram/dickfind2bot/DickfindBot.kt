@@ -18,12 +18,12 @@ import com.vdsirotkin.telegram.dickfind2bot.engine.Game
 import com.vdsirotkin.telegram.dickfind2bot.stats.*
 import com.vdsirotkin.telegram.dickfind2bot.util.executeSafe
 import com.vdsirotkin.telegram.dickfind2bot.util.trueFirstName
+import jakarta.annotation.PostConstruct
 import mu.KLogging
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
 
 @Component
 class DickfindBot(
